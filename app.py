@@ -2,13 +2,18 @@ import streamlit as st
 import sys
 import os
 
-# Add src/ folder to Python path
 sys.path.append(os.path.join(os.path.dirname(__file__), "src"))
 
 from processor import process_file, chunk_text
 from generator import generate_quiz, generate_flashcards, chat_with_doc
+from database import (
+    init_db, save_document, save_quiz,
+    save_flashcards, save_quiz_result,
+    get_all_documents, get_quiz_results
+)
 
-# ── Page Config ──────────────────────────────────────────────────────────────
+init_db()
+
 st.set_page_config(
     page_title="EduContent AI Generator",
     page_icon="🎓",
@@ -16,7 +21,6 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# ── CSS ──────────────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Sora:wght@300;400;600&display=swap');
@@ -65,14 +69,15 @@ h1, h2, h3 { font-family: 'JetBrains Mono', monospace; }
 </style>
 """, unsafe_allow_html=True)
 
-# ── Session State ────────────────────────────────────────────────────────────
 defaults = {
     "doc_text": "",
     "doc_name": "",
+    "doc_id": None,
     "quiz_questions": [],
     "quiz_answers": [],
     "quiz_submitted": False,
     "quiz_score": 0,
+    "quiz_id": None,
     "flashcards": [],
     "fc_index": 0,
     "fc_flipped": False,
@@ -82,17 +87,17 @@ for k, v in defaults.items():
     if k not in st.session_state:
         st.session_state[k] = v
 
-# ── Sidebar ──────────────────────────────────────────────────────────────────
 with st.sidebar:
     st.markdown("## 🎓 EduContent AI")
     st.caption("Groq · LLaMA3 · Free & Fast")
     st.divider()
 
-    page = st.radio("", [
+    page = st.radio("Navigation", [
         "📤 Upload Document",
         "📝 Generate Quiz",
         "🃏 Flashcards",
-        "💬 Chat with Doc"
+        "💬 Chat with Doc",
+        "📊 Progress"
     ], label_visibility="collapsed")
 
     st.divider()
@@ -135,6 +140,9 @@ if page == "📤 Upload Document":
                 chunks = chunk_text(text)
                 st.session_state["doc_text"] = text
                 st.session_state["doc_name"] = uploaded.name
+
+                doc_id = save_document(uploaded.name, text)
+                st.session_state["doc_id"] = doc_id
 
                 col1, col2, col3 = st.columns(3)
                 col1.metric("📝 Characters", f"{len(text):,}")
@@ -181,7 +189,9 @@ elif page == "📝 Generate Quiz":
         with st.spinner("🤖 AI is writing your quiz..."):
             try:
                 questions = generate_quiz(st.session_state["doc_text"], num_q)
+                quiz_id = save_quiz(st.session_state["doc_id"] or 1, questions)
                 st.session_state["quiz_questions"] = questions
+                st.session_state["quiz_id"] = quiz_id
                 st.session_state["quiz_answers"] = [None] * len(questions)
                 st.session_state["quiz_submitted"] = False
                 st.session_state["quiz_score"] = 0
@@ -203,7 +213,8 @@ elif page == "📝 Generate Quiz":
             )
 
             sel = st.radio(
-                "", q["options"],
+                f"Select answer for question {i+1}",
+                q["options"],
                 index=None,
                 key=f"q{i}",
                 label_visibility="collapsed"
@@ -230,6 +241,7 @@ elif page == "📝 Generate Quiz":
                 )
                 st.session_state["quiz_score"] = score
                 st.session_state["quiz_submitted"] = True
+                save_quiz_result(st.session_state["quiz_id"] or 1, score, len(questions))
                 pct = score / len(questions) * 100
                 st.success(f"🎯 Score: {score}/{len(questions)} ({pct:.0f}%)")
                 if pct >= 80:
@@ -270,6 +282,7 @@ elif page == "🃏 Flashcards":
         with st.spinner("🤖 Creating flashcards..."):
             try:
                 cards = generate_flashcards(st.session_state["doc_text"], num_cards)
+                save_flashcards(st.session_state["doc_id"] or 1, cards)
                 st.session_state["flashcards"] = cards
                 st.session_state["fc_index"] = 0
                 st.session_state["fc_flipped"] = False
@@ -369,3 +382,46 @@ elif page == "💬 Chat with Doc":
         if st.button("🗑️ Clear Chat", use_container_width=True):
             st.session_state["chat_history"] = []
             st.rerun()
+
+# ════════════════════════════════════════════════════════════════════════════
+# PAGE 5 — Progress
+# ════════════════════════════════════════════════════════════════════════════
+elif page == "📊 Progress":
+    st.title("📊 Progress Dashboard")
+    st.divider()
+
+    results = get_quiz_results()
+    if not results:
+        st.info("Take some quizzes to see your progress here!")
+    else:
+        scores = [r[1]/r[2]*100 for r in results]
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.markdown(
+                f'<div class="card card-blue" style="text-align:center"><h2>{len(results)}</h2><p>Quizzes Taken</p></div>',
+                unsafe_allow_html=True
+            )
+        with col2:
+            st.markdown(
+                f'<div class="card card-green" style="text-align:center"><h2>{sum(scores)/len(scores):.0f}%</h2><p>Average Score</p></div>',
+                unsafe_allow_html=True
+            )
+        with col3:
+            st.markdown(
+                f'<div class="card card-purple" style="text-align:center"><h2>{max(scores):.0f}%</h2><p>Best Score</p></div>',
+                unsafe_allow_html=True
+            )
+
+        st.divider()
+        st.subheader("Recent Quiz History")
+        for r in results:
+            pct = r[1]/r[2]*100
+            color = "#3fb950" if pct >= 70 else "#f85149"
+            st.markdown(f"""
+            <div style='background:#1a1f2e;border-radius:8px;padding:12px;margin:8px 0;
+                        border-left:4px solid {color}'>
+                📄 <b>{r[3]}</b> &nbsp;·&nbsp;
+                {r[1]}/{r[2]} correct &nbsp;·&nbsp;
+                <b style='color:{color}'>{pct:.0f}%</b> &nbsp;·&nbsp;
+                <small>{r[0][:16]}</small>
+            </div>""", unsafe_allow_html=True)
