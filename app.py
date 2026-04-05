@@ -402,19 +402,12 @@ for k, v in defaults.items():
     if k not in st.session_state:
         st.session_state[k] = v
 
-# ── Handle Home Card Navigation ───────────────────────────────────────────
-if st.session_state.get("_nav"):
-    target = st.session_state["_nav"]
-    st.session_state["_nav"] = None
-    st.query_params["page"] = target
-
 # ── Sidebar ───────────────────────────────────────────────────────────────
 with st.sidebar:
     st.markdown('<div class="nav-brand">🎓 EduContent AI</div>', unsafe_allow_html=True)
     st.markdown('<div class="nav-sub">Powered by Groq · LLaMA3</div>', unsafe_allow_html=True)
     st.divider()
 
-    # Language selector
     if TTS_AVAILABLE:
         st.markdown("#### 🌍 Language")
         lang_name = st.selectbox(
@@ -490,8 +483,8 @@ if page == "🏠 Home":
                 <div class="feature-desc">{desc}</div>
             </div>
             """, unsafe_allow_html=True)
-            if st.button(f"Open {title}", key=f"nav_{title}", use_container_width=True, type="primary"):
-                st.session_state["_nav"] = target
+            if st.button(f"Open {title}", key=f"nav_{title}",
+                        use_container_width=True, type="primary"):
                 st.query_params["page"] = target
                 st.rerun()
 
@@ -519,7 +512,8 @@ elif page == "📤 Upload Document":
     st.markdown('<div class="hero-sub">Supports PDF and TXT files up to 200MB</div>', unsafe_allow_html=True)
     st.divider()
 
-    uploaded = st.file_uploader("Drop file here", type=["pdf", "txt"], label_visibility="collapsed")
+    uploaded = st.file_uploader("Drop file here", type=["pdf", "txt"],
+                                label_visibility="collapsed")
 
     if uploaded:
         with st.spinner("⚙️ Processing your document..."):
@@ -539,9 +533,8 @@ elif page == "📤 Upload Document":
                 st.divider()
                 with st.expander("👀 Preview content"):
                     st.code(text[:1000], language=None)
-                st.success(f"✅ '{uploaded.name}' loaded! Now go generate a quiz or flashcards!")
+                st.success(f"✅ '{uploaded.name}' loaded!")
 
-                # Quick navigation buttons after upload
                 st.markdown("### What would you like to do?")
                 c1, c2, c3 = st.columns(3)
                 with c1:
@@ -610,7 +603,6 @@ elif page == "📝 Generate Quiz":
             try:
                 questions = generate_quiz(st.session_state["doc_text"], num_q)
 
-                # Translate if needed
                 if TTS_AVAILABLE and st.session_state["selected_lang"] != "English":
                     lang_code = LANGUAGE_CODES[st.session_state["selected_lang"]]
                     with st.spinner(f"🌍 Translating to {st.session_state['selected_lang']}..."):
@@ -623,7 +615,6 @@ elif page == "📝 Generate Quiz":
                 st.session_state["quiz_submitted"] = False
                 st.session_state["quiz_score"] = 0
 
-                # Setup timer
                 if timer_mins != "No Timer":
                     mins = int(timer_mins.split()[0])
                     st.session_state["timer_duration"] = mins * 60
@@ -632,12 +623,15 @@ elif page == "📝 Generate Quiz":
                     st.session_state["timer_expired"] = False
                 else:
                     st.session_state["timer_active"] = False
+                    st.session_state["timer_expired"] = False
 
                 st.success(f"✅ {len(questions)} questions ready!")
             except Exception as e:
                 st.error(f"❌ Failed: {e}")
 
-    # Timer Display
+    # ── Timer — only ONE placeholder ──────────────────────────────────────
+    timer_placeholder = st.empty()
+
     if st.session_state["timer_active"] and not st.session_state["quiz_submitted"]:
         elapsed = time.time() - st.session_state["timer_start"]
         remaining = st.session_state["timer_duration"] - elapsed
@@ -648,25 +642,33 @@ elif page == "📝 Generate Quiz":
             st.session_state["quiz_submitted"] = True
             answers = st.session_state["quiz_answers"]
             questions_t = st.session_state["quiz_questions"]
-            score = sum(1 for i, q in enumerate(questions_t) if answers[i] == q["answer"])
+            score = sum(1 for i, q in enumerate(questions_t)
+                       if answers[i] == q["answer"])
             st.session_state["quiz_score"] = score
-            save_quiz_result(st.session_state["quiz_id"] or 1, score, len(questions_t))
+            save_quiz_result(st.session_state["quiz_id"] or 1,
+                           score, len(questions_t))
             st.rerun()
         else:
             mins_left = int(remaining // 60)
             secs_left = int(remaining % 60)
             time_str = f"{mins_left:02d}:{secs_left:02d}"
             if remaining <= 60:
-                st.markdown(f'<div class="timer-warning">⚠️ Hurry Up! ⏱️ {time_str}</div>', unsafe_allow_html=True)
+                timer_placeholder.markdown(
+                    f'<div class="timer-warning">⚠️ Hurry Up! ⏱️ {time_str}</div>',
+                    unsafe_allow_html=True
+                )
             else:
-                st.markdown(f'<div class="timer-box">⏱️ Time Remaining: {time_str}</div>', unsafe_allow_html=True)
+                timer_placeholder.markdown(
+                    f'<div class="timer-box">⏱️ Time Remaining: {time_str}</div>',
+                    unsafe_allow_html=True
+                )
             time.sleep(1)
             st.rerun()
 
     if st.session_state.get("timer_expired"):
         st.error("⏰ Time's Up! Quiz Auto-Submitted!")
 
-    # Questions
+    # ── Questions ─────────────────────────────────────────────────────────
     questions = st.session_state["quiz_questions"]
     if questions:
         st.divider()
@@ -682,13 +684,13 @@ elif page == "📝 Generate Quiz":
             </div>
             """, unsafe_allow_html=True)
 
-            # TTS button for question
             if TTS_AVAILABLE:
                 if st.button("🔊 Listen", key=f"tts_q{i}"):
                     lang_code = LANGUAGE_CODES[st.session_state["selected_lang"]]
                     audio = text_to_speech(q["question"], lang_code)
                     if audio:
-                        st.markdown(get_audio_html(audio, autoplay=True), unsafe_allow_html=True)
+                        st.markdown(get_audio_html(audio, autoplay=True),
+                                   unsafe_allow_html=True)
 
             sel = st.radio(
                 f"Answer for Q{i+1}",
@@ -702,31 +704,38 @@ elif page == "📝 Generate Quiz":
 
             if submitted:
                 if chosen == correct:
-                    st.markdown('<div class="badge-correct">✅ Correct!</div>', unsafe_allow_html=True)
+                    st.markdown('<div class="badge-correct">✅ Correct!</div>',
+                               unsafe_allow_html=True)
                 else:
-                    st.markdown(f'<div class="badge-wrong">❌ Correct Answer: {correct}</div>', unsafe_allow_html=True)
-                st.markdown(f'<div class="explanation-box">💡 {q.get("explanation","")}</div>', unsafe_allow_html=True)
-
-                # TTS for explanation
+                    st.markdown(
+                        f'<div class="badge-wrong">❌ Correct Answer: {correct}</div>',
+                        unsafe_allow_html=True
+                    )
+                st.markdown(
+                    f'<div class="explanation-box">💡 {q.get("explanation","")}</div>',
+                    unsafe_allow_html=True
+                )
                 if TTS_AVAILABLE:
                     if st.button("🔊 Listen to explanation", key=f"tts_exp{i}"):
                         lang_code = LANGUAGE_CODES[st.session_state["selected_lang"]]
                         exp_text = f"The correct answer is {correct}. {q.get('explanation','')}"
                         audio = text_to_speech(exp_text, lang_code)
                         if audio:
-                            st.markdown(get_audio_html(audio, autoplay=True), unsafe_allow_html=True)
-
+                            st.markdown(get_audio_html(audio, autoplay=True),
+                                       unsafe_allow_html=True)
             st.write("")
 
         st.divider()
         if not st.session_state["quiz_submitted"]:
             if st.button("✅ Submit Answers", type="primary", use_container_width=True):
                 answers = st.session_state["quiz_answers"]
-                score = sum(1 for i, q in enumerate(questions) if answers[i] == q["answer"])
+                score = sum(1 for i, q in enumerate(questions)
+                           if answers[i] == q["answer"])
                 st.session_state["quiz_score"] = score
                 st.session_state["quiz_submitted"] = True
                 st.session_state["timer_active"] = False
-                save_quiz_result(st.session_state["quiz_id"] or 1, score, len(questions))
+                save_quiz_result(st.session_state["quiz_id"] or 1,
+                               score, len(questions))
                 if score / len(questions) * 100 >= 80:
                     st.balloons()
                 st.rerun()
@@ -739,13 +748,13 @@ elif page == "📝 Generate Quiz":
             </div>
             """, unsafe_allow_html=True)
 
-            # TTS score
             if TTS_AVAILABLE:
                 lang_code = LANGUAGE_CODES[st.session_state["selected_lang"]]
                 score_text = f"You scored {st.session_state['quiz_score']} out of {len(questions)}, that is {pct:.0f} percent."
                 audio = text_to_speech(score_text, lang_code)
                 if audio:
-                    st.markdown(get_audio_html(audio, autoplay=True), unsafe_allow_html=True)
+                    st.markdown(get_audio_html(audio, autoplay=True),
+                               unsafe_allow_html=True)
 
             st.write("")
             if st.button("🔄 Retake Quiz", use_container_width=True):
@@ -806,9 +815,9 @@ elif page == "🃏 Flashcards":
             st.progress((idx + 1) / len(cards))
             st.write("")
 
-            st.markdown(f'<div class="fc-front">❓ {card["front"]}</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="fc-front">❓ {card["front"]}</div>',
+                       unsafe_allow_html=True)
 
-            # TTS front
             if TTS_AVAILABLE:
                 lang_code = LANGUAGE_CODES[st.session_state["selected_lang"]]
                 audio_front = text_to_speech(card["front"], lang_code)
@@ -816,8 +825,8 @@ elif page == "🃏 Flashcards":
                     st.markdown(get_audio_html(audio_front), unsafe_allow_html=True)
 
             if st.session_state["fc_flipped"]:
-                st.markdown(f'<div class="fc-back">✅ {card["back"]}</div>', unsafe_allow_html=True)
-                # TTS back
+                st.markdown(f'<div class="fc-back">✅ {card["back"]}</div>',
+                           unsafe_allow_html=True)
                 if TTS_AVAILABLE:
                     audio_back = text_to_speech(card["back"], lang_code)
                     if audio_back:
@@ -859,10 +868,14 @@ elif page == "💬 Chat with Doc":
         st.stop()
 
     for h in st.session_state["chat_history"]:
-        st.markdown(f'<div class="chat-user"><div class="chat-label">🧑 You</div>{h["user"]}</div>', unsafe_allow_html=True)
-        st.markdown(f'<div class="chat-ai"><div class="chat-label">🤖 AI Assistant</div>{h["assistant"]}</div>', unsafe_allow_html=True)
-
-        # TTS for AI response
+        st.markdown(
+            f'<div class="chat-user"><div class="chat-label">🧑 You</div>{h["user"]}</div>',
+            unsafe_allow_html=True
+        )
+        st.markdown(
+            f'<div class="chat-ai"><div class="chat-label">🤖 AI Assistant</div>{h["assistant"]}</div>',
+            unsafe_allow_html=True
+        )
         if TTS_AVAILABLE:
             lang_code = LANGUAGE_CODES[st.session_state["selected_lang"]]
             audio = text_to_speech(h["assistant"], lang_code)
@@ -913,11 +926,20 @@ elif page == "📊 Progress":
         scores = [r[1]/r[2]*100 for r in results]
         col1, col2, col3 = st.columns(3)
         with col1:
-            st.markdown(f'<div class="stat-card"><div class="stat-number">{len(results)}</div><div class="stat-label">Quizzes Taken</div></div>', unsafe_allow_html=True)
+            st.markdown(
+                f'<div class="stat-card"><div class="stat-number">{len(results)}</div><div class="stat-label">Quizzes Taken</div></div>',
+                unsafe_allow_html=True
+            )
         with col2:
-            st.markdown(f'<div class="stat-card"><div class="stat-number">{sum(scores)/len(scores):.0f}%</div><div class="stat-label">Average Score</div></div>', unsafe_allow_html=True)
+            st.markdown(
+                f'<div class="stat-card"><div class="stat-number">{sum(scores)/len(scores):.0f}%</div><div class="stat-label">Average Score</div></div>',
+                unsafe_allow_html=True
+            )
         with col3:
-            st.markdown(f'<div class="stat-card"><div class="stat-number">{max(scores):.0f}%</div><div class="stat-label">Best Score</div></div>', unsafe_allow_html=True)
+            st.markdown(
+                f'<div class="stat-card"><div class="stat-number">{max(scores):.0f}%</div><div class="stat-label">Best Score</div></div>',
+                unsafe_allow_html=True
+            )
 
         st.divider()
         st.markdown("### 🏆 Recent Results")
