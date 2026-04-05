@@ -23,120 +23,101 @@ st.set_page_config(
 
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Fira+Code:wght@400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fira+Code:wght@500&display=swap');
 
 html, body, [class*="css"] {
-    font-family: 'Outfit', sans-serif;
+    font-family: 'Nunito', sans-serif;
 }
 
 .stApp {
-    background: linear-gradient(135deg, #0a0e1a 0%, #0d1425 50%, #0a1628 100%);
-    color: #e2e8f0;
+    background: linear-gradient(160deg, #f0f4ff 0%, #fdf0ff 50%, #fff0f7 100%);
+    color: #1a1a2e;
 }
 
-/* Animated background dots */
-.stApp::before {
-    content: '';
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background-image: radial-gradient(circle at 1px 1px, rgba(99,179,237,0.08) 1px, transparent 0);
-    background-size: 40px 40px;
-    pointer-events: none;
-    z-index: 0;
-}
-
-/* Sidebar */
-section[data-testid="stSidebar"] {
-    background: linear-gradient(180deg, #0d1425 0%, #111827 100%) !important;
-    border-right: 1px solid rgba(99,179,237,0.15) !important;
-}
-
-section[data-testid="stSidebar"] * {
-    color: #e2e8f0 !important;
-}
-
-/* Hide default streamlit elements */
 #MainMenu, footer, header { visibility: hidden; }
 
-/* Glowing title */
+section[data-testid="stSidebar"] {
+    background: linear-gradient(180deg, #667eea 0%, #764ba2 100%) !important;
+    border-right: none !important;
+}
+section[data-testid="stSidebar"] * {
+    color: white !important;
+}
+section[data-testid="stSidebar"] .stRadio label {
+    background: rgba(255,255,255,0.12) !important;
+    border-radius: 10px !important;
+    padding: 8px 14px !important;
+    margin: 3px 0 !important;
+    display: block !important;
+    transition: all 0.2s !important;
+}
+section[data-testid="stSidebar"] .stRadio label:hover {
+    background: rgba(255,255,255,0.25) !important;
+}
+
+/* Hero */
 .hero-title {
-    font-family: 'Outfit', sans-serif;
-    font-size: 3em;
-    font-weight: 800;
-    background: linear-gradient(135deg, #63b3ed, #76e4f7, #b794f4);
+    font-size: 3.2em;
+    font-weight: 900;
+    background: linear-gradient(135deg, #667eea, #f093fb, #f5576c);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    margin-bottom: 0;
     line-height: 1.2;
+    margin-bottom: 6px;
 }
 
 .hero-sub {
-    color: #718096;
-    font-size: 1.1em;
-    font-weight: 300;
-    margin-top: 4px;
-    margin-bottom: 24px;
+    color: #6b7280;
+    font-size: 1.15em;
+    font-weight: 600;
+    margin-bottom: 28px;
 }
 
 /* Feature cards */
 .feature-card {
-    background: linear-gradient(135deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01));
-    border: 1px solid rgba(99,179,237,0.2);
-    border-radius: 16px;
-    padding: 24px;
-    margin: 10px 0;
+    background: white;
+    border-radius: 20px;
+    padding: 28px 24px;
+    margin: 8px 0;
+    box-shadow: 0 4px 20px rgba(102,126,234,0.12);
+    border: 2px solid transparent;
     transition: all 0.3s ease;
     position: relative;
     overflow: hidden;
 }
 
-.feature-card::before {
+.feature-card::after {
     content: '';
     position: absolute;
     top: 0; left: 0;
-    width: 100%; height: 3px;
-    background: linear-gradient(90deg, #63b3ed, #b794f4);
+    width: 100%; height: 5px;
+    background: var(--card-color, linear-gradient(90deg, #667eea, #764ba2));
 }
 
 .feature-card:hover {
-    border-color: rgba(99,179,237,0.5);
-    transform: translateY(-2px);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(102,126,234,0.2);
 }
 
-.feature-icon {
-    font-size: 2.5em;
-    margin-bottom: 12px;
-}
-
-.feature-title {
-    font-size: 1.2em;
-    font-weight: 700;
-    color: #e2e8f0;
-    margin-bottom: 6px;
-}
-
-.feature-desc {
-    font-size: 0.9em;
-    color: #718096;
-    line-height: 1.5;
-}
+.feature-icon { font-size: 2.8em; margin-bottom: 12px; }
+.feature-title { font-size: 1.2em; font-weight: 800; color: #1a1a2e; }
+.feature-desc { font-size: 0.9em; color: #6b7280; margin-top: 6px; line-height: 1.5; }
 
 /* Quiz cards */
 .quiz-card {
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(99,179,237,0.2);
-    border-radius: 14px;
-    padding: 20px 24px;
-    margin: 16px 0;
-    position: relative;
+    background: white;
+    border-radius: 16px;
+    padding: 22px 26px;
+    margin: 14px 0;
+    box-shadow: 0 2px 15px rgba(102,126,234,0.1);
+    border-left: 5px solid #667eea;
 }
 
 .quiz-number {
     font-family: 'Fira Code', monospace;
-    font-size: 0.75em;
-    color: #63b3ed;
+    font-size: 0.72em;
+    color: #667eea;
     font-weight: 600;
     letter-spacing: 2px;
     text-transform: uppercase;
@@ -145,253 +126,274 @@ section[data-testid="stSidebar"] * {
 
 .quiz-question {
     font-size: 1.1em;
-    font-weight: 600;
-    color: #e2e8f0;
+    font-weight: 700;
+    color: #1a1a2e;
     line-height: 1.5;
 }
 
-/* Flashcards */
-.fc-front {
-    background: linear-gradient(135deg, #1a365d, #2a4a7f);
-    border: 1px solid rgba(99,179,237,0.3);
-    border-radius: 20px;
-    padding: 40px 30px;
-    text-align: center;
-    font-size: 1.3em;
-    font-weight: 700;
-    color: #bee3f8;
-    min-height: 160px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 20px 60px rgba(99,179,237,0.15);
-}
-
-.fc-back {
-    background: linear-gradient(135deg, #1a3a2a, #22543d);
-    border: 1px solid rgba(72,187,120,0.3);
-    border-radius: 20px;
-    padding: 40px 30px;
-    text-align: center;
-    font-size: 1em;
-    color: #9ae6b4;
-    min-height: 160px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 20px 60px rgba(72,187,120,0.1);
-    margin-top: 12px;
-}
-
-/* Result badges */
+/* Answer badges */
 .badge-correct {
-    background: linear-gradient(135deg, #22543d, #276749);
-    border: 1px solid #48bb78;
-    border-radius: 8px;
-    padding: 8px 16px;
-    color: #9ae6b4;
-    font-weight: 700;
-    font-size: 0.95em;
+    background: linear-gradient(135deg, #d4edda, #c3e6cb);
+    border: 2px solid #28a745;
+    border-radius: 10px;
+    padding: 10px 18px;
+    color: #155724;
+    font-weight: 800;
     display: inline-block;
-    margin: 4px 0;
+    margin: 6px 0;
 }
 
 .badge-wrong {
-    background: linear-gradient(135deg, #742a2a, #9b2c2c);
-    border: 1px solid #fc8181;
-    border-radius: 8px;
-    padding: 8px 16px;
-    color: #fed7d7;
-    font-weight: 700;
-    font-size: 0.95em;
+    background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+    border: 2px solid #dc3545;
+    border-radius: 10px;
+    padding: 10px 18px;
+    color: #721c24;
+    font-weight: 800;
     display: inline-block;
-    margin: 4px 0;
+    margin: 6px 0;
 }
 
 .explanation-box {
-    background: rgba(183,148,244,0.08);
-    border-left: 3px solid #b794f4;
-    border-radius: 0 8px 8px 0;
-    padding: 10px 14px;
-    color: #d6bcfa;
-    font-size: 0.9em;
-    margin-top: 8px;
-}
-
-/* Chat bubbles */
-.chat-user {
-    background: linear-gradient(135deg, rgba(99,179,237,0.12), rgba(99,179,237,0.06));
-    border: 1px solid rgba(99,179,237,0.25);
-    border-radius: 16px 16px 4px 16px;
-    padding: 14px 18px;
-    margin: 10px 0;
-    color: #bee3f8;
-}
-
-.chat-ai {
-    background: linear-gradient(135deg, rgba(72,187,120,0.1), rgba(72,187,120,0.05));
-    border: 1px solid rgba(72,187,120,0.2);
-    border-radius: 16px 16px 16px 4px;
-    padding: 14px 18px;
-    margin: 10px 0;
-    color: #9ae6b4;
-}
-
-.chat-label {
-    font-family: 'Fira Code', monospace;
-    font-size: 0.7em;
+    background: linear-gradient(135deg, #e8f4fd, #d1ecf1);
+    border-left: 4px solid #17a2b8;
+    border-radius: 0 10px 10px 0;
+    padding: 12px 16px;
+    color: #0c5460;
+    font-size: 0.92em;
+    margin-top: 10px;
     font-weight: 600;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    margin-bottom: 6px;
-    opacity: 0.7;
 }
 
 /* Score display */
 .score-display {
-    background: linear-gradient(135deg, #1a365d, #2a4a7f);
-    border: 1px solid rgba(99,179,237,0.4);
-    border-radius: 20px;
-    padding: 30px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-radius: 24px;
+    padding: 40px;
     text-align: center;
+    box-shadow: 0 10px 40px rgba(102,126,234,0.35);
 }
 
 .score-number {
-    font-family: 'Outfit', sans-serif;
-    font-size: 4em;
-    font-weight: 800;
-    background: linear-gradient(135deg, #63b3ed, #b794f4);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    font-size: 5em;
+    font-weight: 900;
+    color: white;
     line-height: 1;
 }
 
 .score-label {
-    color: #718096;
-    font-size: 0.95em;
-    margin-top: 8px;
+    color: rgba(255,255,255,0.8);
+    font-size: 1.1em;
+    font-weight: 600;
+    margin-top: 10px;
+}
+
+/* Flashcards */
+.fc-front {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-radius: 24px;
+    padding: 45px 35px;
+    text-align: center;
+    font-size: 1.4em;
+    font-weight: 800;
+    color: white;
+    min-height: 180px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 15px 50px rgba(102,126,234,0.3);
+}
+
+.fc-back {
+    background: linear-gradient(135deg, #11998e, #38ef7d);
+    border-radius: 24px;
+    padding: 45px 35px;
+    text-align: center;
+    font-size: 1.1em;
+    font-weight: 700;
+    color: white;
+    min-height: 180px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 15px 50px rgba(17,153,142,0.25);
+    margin-top: 16px;
+}
+
+/* Chat bubbles */
+.chat-user {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-radius: 20px 20px 6px 20px;
+    padding: 16px 20px;
+    margin: 12px 0;
+    color: white;
+    box-shadow: 0 4px 15px rgba(102,126,234,0.25);
+}
+
+.chat-ai {
+    background: white;
+    border: 2px solid #e8e8ff;
+    border-radius: 20px 20px 20px 6px;
+    padding: 16px 20px;
+    margin: 12px 0;
+    color: #1a1a2e;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+}
+
+.chat-label {
+    font-size: 0.72em;
+    font-weight: 800;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    opacity: 0.75;
 }
 
 /* Stat cards */
 .stat-card {
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 16px;
-    padding: 24px;
+    background: white;
+    border-radius: 20px;
+    padding: 28px;
     text-align: center;
+    box-shadow: 0 4px 20px rgba(102,126,234,0.1);
 }
 
 .stat-number {
-    font-size: 2.5em;
-    font-weight: 800;
-    background: linear-gradient(135deg, #63b3ed, #76e4f7);
+    font-size: 3em;
+    font-weight: 900;
+    background: linear-gradient(135deg, #667eea, #f093fb);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
 }
 
 .stat-label {
-    color: #718096;
-    font-size: 0.85em;
-    margin-top: 4px;
+    color: #6b7280;
+    font-size: 0.9em;
+    font-weight: 700;
+    margin-top: 6px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
-/* Sidebar nav */
-.nav-brand {
-    font-family: 'Outfit', sans-serif;
-    font-size: 1.4em;
-    font-weight: 800;
-    background: linear-gradient(135deg, #63b3ed, #b794f4);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-}
-
+/* Doc status */
 .doc-loaded {
-    background: linear-gradient(135deg, rgba(72,187,120,0.1), rgba(72,187,120,0.05));
-    border: 1px solid rgba(72,187,120,0.3);
-    border-radius: 12px;
-    padding: 14px;
+    background: linear-gradient(135deg, rgba(255,255,255,0.25), rgba(255,255,255,0.15));
+    border: 2px solid rgba(255,255,255,0.4);
+    border-radius: 14px;
+    padding: 14px 16px;
     margin: 8px 0;
 }
 
 .doc-not-loaded {
-    background: linear-gradient(135deg, rgba(245,101,101,0.1), rgba(245,101,101,0.05));
-    border: 1px solid rgba(245,101,101,0.3);
-    border-radius: 12px;
-    padding: 14px;
+    background: rgba(0,0,0,0.15);
+    border: 2px solid rgba(255,255,255,0.2);
+    border-radius: 14px;
+    padding: 14px 16px;
     margin: 8px 0;
 }
 
-/* Progress bar custom */
+/* Progress bar */
 .stProgress > div > div {
-    background: linear-gradient(90deg, #63b3ed, #b794f4) !important;
+    background: linear-gradient(90deg, #667eea, #f093fb) !important;
     border-radius: 10px !important;
 }
 
 /* Buttons */
 .stButton > button {
-    border-radius: 10px !important;
-    font-family: 'Outfit', sans-serif !important;
-    font-weight: 600 !important;
+    border-radius: 12px !important;
+    font-family: 'Nunito', sans-serif !important;
+    font-weight: 800 !important;
+    font-size: 1em !important;
     transition: all 0.2s ease !important;
+    border: none !important;
 }
 
 .stButton > button[kind="primary"] {
-    background: linear-gradient(135deg, #3182ce, #553c9a) !important;
-    border: none !important;
+    background: linear-gradient(135deg, #667eea, #764ba2) !important;
     color: white !important;
+    box-shadow: 0 4px 15px rgba(102,126,234,0.4) !important;
 }
 
 .stButton > button[kind="primary"]:hover {
-    transform: translateY(-1px) !important;
-    box-shadow: 0 8px 25px rgba(99,179,237,0.3) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 25px rgba(102,126,234,0.5) !important;
 }
 
-/* Upload area */
-.stFileUploader {
-    border-radius: 16px !important;
+.stButton > button[kind="secondary"] {
+    background: white !important;
+    color: #667eea !important;
+    border: 2px solid #667eea !important;
 }
 
 /* Metrics */
 [data-testid="metric-container"] {
-    background: rgba(255,255,255,0.03) !important;
-    border: 1px solid rgba(255,255,255,0.08) !important;
-    border-radius: 12px !important;
-    padding: 16px !important;
+    background: white !important;
+    border-radius: 16px !important;
+    padding: 20px !important;
+    box-shadow: 0 4px 15px rgba(102,126,234,0.1) !important;
+    border: none !important;
 }
 
 /* Divider */
-hr {
-    border-color: rgba(255,255,255,0.08) !important;
+hr { border-color: rgba(102,126,234,0.15) !important; }
+
+/* Nav brand */
+.nav-brand {
+    font-size: 1.5em;
+    font-weight: 900;
+    color: white;
+}
+
+.nav-sub {
+    font-size: 0.85em;
+    color: rgba(255,255,255,0.7);
+    font-weight: 600;
+}
+
+/* Step cards */
+.step-card {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    margin: 8px 0;
+    box-shadow: 0 3px 15px rgba(102,126,234,0.1);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.step-number {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    font-size: 1.1em;
+    flex-shrink: 0;
 }
 </style>
 """, unsafe_allow_html=True)
 
-# ── Session State ────────────────────────────────────────────────────────────
+# ── Session State ─────────────────────────────────────────────────────────
 defaults = {
-    "doc_text": "",
-    "doc_name": "",
-    "doc_id": None,
-    "quiz_questions": [],
-    "quiz_answers": [],
-    "quiz_submitted": False,
-    "quiz_score": 0,
-    "quiz_id": None,
-    "flashcards": [],
-    "fc_index": 0,
-    "fc_flipped": False,
+    "doc_text": "", "doc_name": "", "doc_id": None,
+    "quiz_questions": [], "quiz_answers": [],
+    "quiz_submitted": False, "quiz_score": 0, "quiz_id": None,
+    "flashcards": [], "fc_index": 0, "fc_flipped": False,
     "chat_history": []
 }
 for k, v in defaults.items():
     if k not in st.session_state:
         st.session_state[k] = v
 
-# ── Sidebar ──────────────────────────────────────────────────────────────────
+# ── Sidebar ───────────────────────────────────────────────────────────────
 with st.sidebar:
     st.markdown('<div class="nav-brand">🎓 EduContent AI</div>', unsafe_allow_html=True)
-    st.caption("Powered by Groq · LLaMA3")
+    st.markdown('<div class="nav-sub">Powered by Groq · LLaMA3</div>', unsafe_allow_html=True)
     st.divider()
 
     page = st.radio("Navigation", [
@@ -404,20 +406,19 @@ with st.sidebar:
     ], label_visibility="collapsed")
 
     st.divider()
-
     if st.session_state["doc_name"]:
         st.markdown(f"""
         <div class="doc-loaded">
-            <div style="font-size:0.7em;color:#48bb78;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px">✓ Document Loaded</div>
-            <div style="font-weight:600;color:#9ae6b4;font-size:0.95em">{st.session_state["doc_name"]}</div>
-            <div style="color:#68d391;font-size:0.8em;margin-top:2px">{len(st.session_state["doc_text"]):,} characters</div>
+            <div style="font-size:0.7em;font-weight:800;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px">✅ Loaded</div>
+            <div style="font-weight:700;font-size:0.95em">{st.session_state["doc_name"]}</div>
+            <div style="font-size:0.8em;opacity:0.8;margin-top:2px">{len(st.session_state["doc_text"]):,} characters</div>
         </div>
         """, unsafe_allow_html=True)
     else:
         st.markdown("""
         <div class="doc-not-loaded">
-            <div style="font-size:0.7em;color:#fc8181;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px">⚠ No Document</div>
-            <div style="color:#feb2b2;font-size:0.85em">Upload a document to begin</div>
+            <div style="font-size:0.7em;font-weight:800;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px">⚠️ No Document</div>
+            <div style="font-size:0.85em;opacity:0.8">Upload a document first</div>
         </div>
         """, unsafe_allow_html=True)
 
@@ -427,64 +428,55 @@ with st.sidebar:
             st.session_state[k] = v
         st.rerun()
 
-# ════════════════════════════════════════════════════════════════════════════
-# PAGE: Home
-# ════════════════════════════════════════════════════════════════════════════
+# ═══════════════════════════════════════════════════════════════════════════
+# HOME
+# ═══════════════════════════════════════════════════════════════════════════
 if page == "🏠 Home":
-    st.markdown('<div class="hero-title">Learn Smarter,<br>Not Harder.</div>', unsafe_allow_html=True)
-    st.markdown('<div class="hero-sub">Upload any document → Get quizzes, flashcards & AI chat instantly</div>', unsafe_allow_html=True)
+    st.markdown('<div class="hero-title">Learn Smarter,<br>Not Harder! 🚀</div>', unsafe_allow_html=True)
+    st.markdown('<div class="hero-sub">Upload any document → Get quizzes, flashcards & AI chat instantly ✨</div>', unsafe_allow_html=True)
 
     col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        st.markdown("""
-        <div class="feature-card">
-            <div class="feature-icon">📤</div>
-            <div class="feature-title">Upload Docs</div>
-            <div class="feature-desc">PDF or TXT files up to 200MB supported</div>
-        </div>
-        """, unsafe_allow_html=True)
-    with col2:
-        st.markdown("""
-        <div class="feature-card">
-            <div class="feature-icon">📝</div>
-            <div class="feature-title">AI Quizzes</div>
-            <div class="feature-desc">Auto-generate multiple choice questions</div>
-        </div>
-        """, unsafe_allow_html=True)
-    with col3:
-        st.markdown("""
-        <div class="feature-card">
-            <div class="feature-icon">🃏</div>
-            <div class="feature-title">Flashcards</div>
-            <div class="feature-desc">Create study cards from any content</div>
-        </div>
-        """, unsafe_allow_html=True)
-    with col4:
-        st.markdown("""
-        <div class="feature-card">
-            <div class="feature-icon">💬</div>
-            <div class="feature-title">AI Chat</div>
-            <div class="feature-desc">Ask questions about your document</div>
-        </div>
-        """, unsafe_allow_html=True)
+    cards = [
+        ("📤", "Upload Docs", "PDF or TXT files supported", "linear-gradient(90deg,#667eea,#764ba2)"),
+        ("📝", "AI Quizzes", "Auto-generate MCQ questions", "linear-gradient(90deg,#f093fb,#f5576c)"),
+        ("🃏", "Flashcards", "Flip-card study sessions", "linear-gradient(90deg,#4facfe,#00f2fe)"),
+        ("💬", "AI Chat", "Ask your document anything", "linear-gradient(90deg,#11998e,#38ef7d)"),
+    ]
+    for col, (icon, title, desc, color) in zip([col1, col2, col3, col4], cards):
+        with col:
+            st.markdown(f"""
+            <div class="feature-card" style="--card-color:{color}">
+                <div class="feature-icon">{icon}</div>
+                <div class="feature-title">{title}</div>
+                <div class="feature-desc">{desc}</div>
+            </div>
+            """, unsafe_allow_html=True)
 
     st.divider()
-    st.markdown("### 🚀 Get Started")
-    st.info("👈 Click **Upload Document** in the sidebar to begin!")
+    st.markdown("### 📖 How to get started")
+    steps = [
+        ("1", "📤", "Upload your PDF or TXT document"),
+        ("2", "⚡", "Choose Quiz, Flashcards, or Chat"),
+        ("3", "🎯", "Learn and track your progress!"),
+    ]
+    for num, icon, text in steps:
+        st.markdown(f"""
+        <div class="step-card">
+            <div class="step-number">{num}</div>
+            <div style="font-size:1.5em">{icon}</div>
+            <div style="font-weight:700;color:#1a1a2e;font-size:1.05em">{text}</div>
+        </div>
+        """, unsafe_allow_html=True)
 
-# ════════════════════════════════════════════════════════════════════════════
-# PAGE: Upload
-# ════════════════════════════════════════════════════════════════════════════
+# ═══════════════════════════════════════════════════════════════════════════
+# UPLOAD
+# ═══════════════════════════════════════════════════════════════════════════
 elif page == "📤 Upload Document":
     st.markdown('<div class="hero-title">📤 Upload Document</div>', unsafe_allow_html=True)
-    st.markdown('<div class="hero-sub">Supports PDF and TXT files</div>', unsafe_allow_html=True)
+    st.markdown('<div class="hero-sub">Supports PDF and TXT files up to 200MB</div>', unsafe_allow_html=True)
     st.divider()
 
-    uploaded = st.file_uploader(
-        "Drop your file here",
-        type=["pdf", "txt"],
-        label_visibility="collapsed"
-    )
+    uploaded = st.file_uploader("Drop file here", type=["pdf", "txt"], label_visibility="collapsed")
 
     if uploaded:
         with st.spinner("⚙️ Processing your document..."):
@@ -504,32 +496,31 @@ elif page == "📤 Upload Document":
                 st.divider()
                 with st.expander("👀 Preview content"):
                     st.code(text[:1000], language=None)
-
-                st.success(f"✅ '{uploaded.name}' loaded successfully! Choose an option from the sidebar.")
+                st.success(f"✅ '{uploaded.name}' loaded! Now go generate a quiz or flashcards!")
             except Exception as e:
                 st.error(f"❌ Error: {e}")
     else:
         col1, col2 = st.columns(2)
         with col1:
             st.markdown("""
-            <div class="feature-card">
+            <div class="feature-card" style="--card-color:linear-gradient(90deg,#667eea,#764ba2)">
                 <div class="feature-icon">📄</div>
                 <div class="feature-title">PDF Files</div>
-                <div class="feature-desc">Upload textbooks, notes, research papers, articles — any PDF document works perfectly.</div>
+                <div class="feature-desc">Textbooks, notes, research papers, articles — any PDF works!</div>
             </div>
             """, unsafe_allow_html=True)
         with col2:
             st.markdown("""
-            <div class="feature-card">
+            <div class="feature-card" style="--card-color:linear-gradient(90deg,#f093fb,#f5576c)">
                 <div class="feature-icon">📝</div>
                 <div class="feature-title">Text Files</div>
-                <div class="feature-desc">Plain .txt files, notes, transcripts, lecture content — all supported instantly.</div>
+                <div class="feature-desc">Plain .txt files, notes, transcripts, lecture content.</div>
             </div>
             """, unsafe_allow_html=True)
 
-# ════════════════════════════════════════════════════════════════════════════
-# PAGE: Quiz
-# ════════════════════════════════════════════════════════════════════════════
+# ═══════════════════════════════════════════════════════════════════════════
+# QUIZ
+# ═══════════════════════════════════════════════════════════════════════════
 elif page == "📝 Generate Quiz":
     st.markdown('<div class="hero-title">📝 Quiz Generator</div>', unsafe_allow_html=True)
     st.markdown('<div class="hero-sub">AI-powered questions from your document</div>', unsafe_allow_html=True)
@@ -575,23 +566,17 @@ elif page == "📝 Generate Quiz":
             </div>
             """, unsafe_allow_html=True)
 
-            sel = st.radio(
-                f"Answer for Q{i+1}",
-                q["options"],
-                index=None,
-                key=f"q{i}",
-                label_visibility="collapsed"
-            )
+            sel = st.radio(f"Answer for Q{i+1}", q["options"], index=None,
+                           key=f"q{i}", label_visibility="collapsed")
             if sel:
                 st.session_state["quiz_answers"][i] = sel
 
             if submitted:
                 if chosen == correct:
-                    st.markdown('<div class="badge-correct">✓ Correct!</div>', unsafe_allow_html=True)
+                    st.markdown('<div class="badge-correct">✅ Correct!</div>', unsafe_allow_html=True)
                 else:
-                    st.markdown(f'<div class="badge-wrong">✗ Correct: {correct}</div>', unsafe_allow_html=True)
-                st.markdown(f'<div class="explanation-box">💡 {q.get("explanation", "")}</div>', unsafe_allow_html=True)
-
+                    st.markdown(f'<div class="badge-wrong">❌ Answer: {correct}</div>', unsafe_allow_html=True)
+                st.markdown(f'<div class="explanation-box">💡 {q.get("explanation","")}</div>', unsafe_allow_html=True)
             st.write("")
 
         st.divider()
@@ -602,8 +587,7 @@ elif page == "📝 Generate Quiz":
                 st.session_state["quiz_score"] = score
                 st.session_state["quiz_submitted"] = True
                 save_quiz_result(st.session_state["quiz_id"] or 1, score, len(questions))
-                pct = score / len(questions) * 100
-                if pct >= 80:
+                if score / len(questions) * 100 >= 80:
                     st.balloons()
                 st.rerun()
         else:
@@ -611,7 +595,7 @@ elif page == "📝 Generate Quiz":
             st.markdown(f"""
             <div class="score-display">
                 <div class="score-number">{pct:.0f}%</div>
-                <div class="score-label">{st.session_state["quiz_score"]} out of {len(questions)} correct</div>
+                <div class="score-label">🎯 {st.session_state["quiz_score"]} out of {len(questions)} correct</div>
             </div>
             """, unsafe_allow_html=True)
             st.write("")
@@ -620,9 +604,9 @@ elif page == "📝 Generate Quiz":
                 st.session_state["quiz_submitted"] = False
                 st.rerun()
 
-# ════════════════════════════════════════════════════════════════════════════
-# PAGE: Flashcards
-# ════════════════════════════════════════════════════════════════════════════
+# ═══════════════════════════════════════════════════════════════════════════
+# FLASHCARDS
+# ═══════════════════════════════════════════════════════════════════════════
 elif page == "🃏 Flashcards":
     st.markdown('<div class="hero-title">🃏 Flashcard Studio</div>', unsafe_allow_html=True)
     st.markdown('<div class="hero-sub">Flip through AI-generated study cards</div>', unsafe_allow_html=True)
@@ -657,17 +641,14 @@ elif page == "🃏 Flashcards":
         idx = st.session_state["fc_index"]
         card = cards[idx]
 
-        col1, col2, col3 = st.columns([1, 3, 1])
-        with col2:
-            st.markdown(f"**Card {idx+1} of {len(cards)}**")
+        _, col, _ = st.columns([1, 3, 1])
+        with col:
+            st.markdown(f"### Card {idx+1} of {len(cards)}")
             st.progress((idx + 1) / len(cards))
             st.write("")
-
             st.markdown(f'<div class="fc-front">❓ {card["front"]}</div>', unsafe_allow_html=True)
-
             if st.session_state["fc_flipped"]:
                 st.markdown(f'<div class="fc-back">✅ {card["back"]}</div>', unsafe_allow_html=True)
-
             st.write("")
             b1, b2, b3 = st.columns(3)
             with b1:
@@ -678,7 +659,7 @@ elif page == "🃏 Flashcards":
                         st.rerun()
             with b2:
                 label = "🙈 Hide" if st.session_state["fc_flipped"] else "👁️ Reveal"
-                if st.button(label, use_container_width=True, type="primary"):
+                if st.button(label, type="primary", use_container_width=True):
                     st.session_state["fc_flipped"] = not st.session_state["fc_flipped"]
                     st.rerun()
             with b3:
@@ -688,9 +669,9 @@ elif page == "🃏 Flashcards":
                         st.session_state["fc_flipped"] = False
                         st.rerun()
 
-# ════════════════════════════════════════════════════════════════════════════
-# PAGE: Chat
-# ════════════════════════════════════════════════════════════════════════════
+# ═══════════════════════════════════════════════════════════════════════════
+# CHAT
+# ═══════════════════════════════════════════════════════════════════════════
 elif page == "💬 Chat with Doc":
     st.markdown('<div class="hero-title">💬 Chat with Doc</div>', unsafe_allow_html=True)
     st.markdown('<div class="hero-sub">Ask anything — answers come from your document</div>', unsafe_allow_html=True)
@@ -701,32 +682,15 @@ elif page == "💬 Chat with Doc":
         st.stop()
 
     for h in st.session_state["chat_history"]:
-        st.markdown(f"""
-        <div class="chat-user">
-            <div class="chat-label">🧑 You</div>
-            {h["user"]}
-        </div>
-        """, unsafe_allow_html=True)
-        st.markdown(f"""
-        <div class="chat-ai">
-            <div class="chat-label">🤖 AI</div>
-            {h["assistant"]}
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown(f'<div class="chat-user"><div class="chat-label">🧑 You</div>{h["user"]}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="chat-ai"><div class="chat-label">🤖 AI Assistant</div>{h["assistant"]}</div>', unsafe_allow_html=True)
 
     question = st.chat_input("Ask anything about your document...")
     if question:
         with st.spinner("🤔 Thinking..."):
             try:
-                answer = chat_with_doc(
-                    st.session_state["doc_text"],
-                    question,
-                    st.session_state["chat_history"]
-                )
-                st.session_state["chat_history"].append({
-                    "user": question,
-                    "assistant": answer
-                })
+                answer = chat_with_doc(st.session_state["doc_text"], question, st.session_state["chat_history"])
+                st.session_state["chat_history"].append({"user": question, "assistant": answer})
                 st.rerun()
             except Exception as e:
                 st.error(f"❌ Error: {e}")
@@ -736,11 +700,11 @@ elif page == "💬 Chat with Doc":
             st.session_state["chat_history"] = []
             st.rerun()
 
-# ════════════════════════════════════════════════════════════════════════════
-# PAGE: Progress
-# ════════════════════════════════════════════════════════════════════════════
+# ═══════════════════════════════════════════════════════════════════════════
+# PROGRESS
+# ═══════════════════════════════════════════════════════════════════════════
 elif page == "📊 Progress":
-    st.markdown('<div class="hero-title">📊 Progress</div>', unsafe_allow_html=True)
+    st.markdown('<div class="hero-title">📊 Your Progress</div>', unsafe_allow_html=True)
     st.markdown('<div class="hero-sub">Track your learning journey</div>', unsafe_allow_html=True)
     st.divider()
 
@@ -758,20 +722,23 @@ elif page == "📊 Progress":
             st.markdown(f'<div class="stat-card"><div class="stat-number">{max(scores):.0f}%</div><div class="stat-label">Best Score</div></div>', unsafe_allow_html=True)
 
         st.divider()
-        st.markdown("### Recent Results")
+        st.markdown("### 🏆 Recent Results")
         for r in results:
             pct = r[1]/r[2]*100
-            color = "#48bb78" if pct >= 70 else "#fc8181"
+            color = "#28a745" if pct >= 70 else "#dc3545"
+            emoji = "🏆" if pct >= 80 else "👍" if pct >= 60 else "📚"
             st.markdown(f"""
-            <div style='background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);
-                        border-radius:12px;padding:16px 20px;margin:8px 0;
-                        border-left:4px solid {color}'>
-                <span style='color:#e2e8f0;font-weight:600'>{r[3]}</span>
-                &nbsp;&nbsp;
-                <span style='color:#718096;font-size:0.9em'>{r[1]}/{r[2]} correct</span>
-                &nbsp;&nbsp;
-                <span style='color:{color};font-weight:700'>{pct:.0f}%</span>
-                &nbsp;&nbsp;
-                <span style='color:#4a5568;font-size:0.8em'>{r[0][:16]}</span>
+            <div style='background:white;border-radius:14px;padding:16px 22px;margin:8px 0;
+                        box-shadow:0 3px 15px rgba(102,126,234,0.1);
+                        border-left:5px solid {color};display:flex;align-items:center;gap:16px'>
+                <span style='font-size:1.8em'>{emoji}</span>
+                <div style='flex:1'>
+                    <div style='font-weight:800;color:#1a1a2e'>{r[3]}</div>
+                    <div style='color:#6b7280;font-size:0.85em'>{r[0][:16]}</div>
+                </div>
+                <div style='text-align:right'>
+                    <div style='font-weight:900;font-size:1.4em;color:{color}'>{pct:.0f}%</div>
+                    <div style='color:#6b7280;font-size:0.85em'>{r[1]}/{r[2]} correct</div>
+                </div>
             </div>
             """, unsafe_allow_html=True)
