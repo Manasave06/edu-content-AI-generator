@@ -1,100 +1,124 @@
-import json
-import re
-import os
-from dotenv import load_dotenv
-from langchain_groq import ChatGroq
-from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
-
-load_dotenv()
-
-def get_llm():
-    return ChatGroq(
-        model="llama-3.3-70b-versatile",
-        temperature=0.7,
-        groq_api_key=os.getenv("GROQ_API_KEY")
-    )
-
-def parse_json(raw: str) -> list:
-    clean = re.sub(r"```json|```", "", raw, flags=re.MULTILINE).strip()
-    return json.loads(clean)
-
 def generate_quiz(text: str, num_questions: int, difficulty: str = "Medium") -> list:
-    """Generate MCQ questions with difficulty level."""
+    """Generate MCQ questions with strict difficulty level."""
     llm = get_llm()
 
-    difficulty_guide = {
-        "Easy": "basic recall questions, straightforward definitions, simple facts",
-        "Medium": "application questions, cause-effect relationships, comparisons",
-        "Hard": "analysis questions, complex mechanisms, multi-step reasoning, critical thinking"
+    difficulty_instructions = {
+        "Easy": """
+EASY LEVEL RULES - STRICTLY FOLLOW:
+- Ask ONLY about basic definitions and simple facts
+- Questions should start with: "What is...", "Which of the following is...", "Define..."
+- Answer should be directly stated in the text
+- Wrong options should be obviously incorrect
+- A student reading for first time should answer correctly
+- Example: "What is Artificial Intelligence?" or "Which term means..."
+- DO NOT ask about processes, mechanisms or analysis
+""",
+        "Medium": """
+MEDIUM LEVEL RULES - STRICTLY FOLLOW:
+- Ask about HOW things work and WHY things happen
+- Questions should start with: "How does...", "Why is...", "What happens when...", "Which process..."
+- Requires understanding, not just memorization
+- Wrong options should be plausible but clearly wrong on reflection
+- Example: "How does machine learning differ from traditional programming?"
+- DO NOT ask simple definitions (that is Easy level)
+- DO NOT ask deep analysis (that is Hard level)
+""",
+        "Hard": """
+HARD LEVEL RULES - STRICTLY FOLLOW:
+- Ask about ANALYSIS, COMPARISON, EVALUATION and CRITICAL THINKING
+- Questions should start with: "Analyze...", "Compare...", "Evaluate...", "Which combination...", "In what scenario..."
+- Requires deep understanding and connecting multiple concepts
+- All 4 options should seem plausible — only an expert can distinguish
+- Example: "Which combination of factors would most likely cause..." or "Evaluate the trade-off between..."
+- DO NOT ask simple definitions or basic facts
+- These questions should challenge even students who studied the topic
+"""
     }
 
     prompt = f"""
-You are an expert educator creating {difficulty.upper()} level exam questions for students.
+You are an expert university professor creating a {difficulty.upper()} level exam.
 
-DIFFICULTY: {difficulty}
-DIFFICULTY GUIDE: {difficulty_guide[difficulty]}
+{difficulty_instructions[difficulty]}
 
-YOUR TASK: Generate exactly {num_questions} {difficulty} level multiple-choice questions.
+TASK: Generate EXACTLY {num_questions} questions at {difficulty} level.
 
-STRICTLY FORBIDDEN:
-- Email addresses, phone numbers, contact information
-- Author names, researcher names
-- Institution or college names
-- Dates of publication or submission
-- Journal names, article titles, page numbers
-- Any document metadata
+CRITICAL RULES:
+- Every question MUST follow the {difficulty} level rules above
+- Questions must be UNIQUE and test DIFFERENT concepts
+- NEVER repeat similar questions
+- NEVER ask about: emails, phone numbers, author names, institution names,
+  dates of publication, journal names, page numbers, contact details
+- ONLY ask about: concepts, mechanisms, processes, classifications,
+  applications, effects, definitions, comparisons
 
-ONLY ASK ABOUT:
-- Scientific concepts and definitions
-- Processes and mechanisms
-- Causes and effects
-- Classifications and types
-- Applications and treatments
-- Key findings and conclusions
-- Important terminology
-
-For {difficulty} level:
-{"- Keep questions simple and direct" if difficulty == "Easy" else ""}
-{"- Ask about understanding and application" if difficulty == "Medium" else ""}
-{"- Ask about analysis, synthesis and evaluation" if difficulty == "Hard" else ""}
-
-Return ONLY a valid JSON array with exactly {num_questions} objects:
-- "question": question string
+Return ONLY a valid JSON array with {num_questions} objects:
+- "question": the question string
 - "options": list of exactly 4 answer strings
-- "answer": correct option (must match one in options exactly)
-- "explanation": why this answer is correct
+- "answer": correct option (must exactly match one item in options)
+- "explanation": detailed explanation of why this is correct
 - "difficulty": "{difficulty}"
 
-Text:
+Text to generate from:
 {text[:3000]}
 
-Return ONLY the JSON array. No extra text. No markdown.
+Return ONLY the JSON array. No extra text. No markdown fences.
 """
     response = llm.invoke([
-        SystemMessage(content="""You are a strict exam question generator.
-Only create questions about subject concepts, not document metadata.
+        SystemMessage(content=f"""You are a strict {difficulty} level exam question generator.
+You MUST follow the {difficulty} level rules exactly.
+Easy = definitions only. Medium = understanding/application. Hard = analysis/critical thinking.
+Never mix difficulty levels. Never ask about document metadata.
 Output only valid JSON arrays."""),
         HumanMessage(content=prompt)
     ])
     return parse_json(response.content.strip())
 
+
 def generate_true_false(text: str, num_questions: int, difficulty: str = "Medium") -> list:
-    """Generate True/False questions."""
+    """Generate True/False questions with strict difficulty."""
     llm = get_llm()
+
+    difficulty_instructions = {
+        "Easy": """
+EASY LEVEL:
+- Simple factual statements directly from the text
+- Obviously true or obviously false
+- Example: "Artificial Intelligence simulates human intelligence. (True)"
+- Student just needs to recall basic facts
+""",
+        "Medium": """
+MEDIUM LEVEL:
+- Statements about processes, relationships and applications
+- Requires understanding to determine true/false
+- Include some tricky statements that seem true but are false
+- Example: "Machine learning always requires labeled data to function."
+- Student needs to understand concepts, not just recall facts
+""",
+        "Hard": """
+HARD LEVEL:
+- Complex statements combining multiple concepts
+- Statements with subtle errors that require deep knowledge to catch
+- Example: "Deep learning outperforms traditional ML in all scenarios regardless of data size."
+- Only an expert who deeply understands the topic can answer correctly
+- Include nuanced statements where common misconceptions lead to wrong answers
+"""
+    }
+
     prompt = f"""
-You are an expert educator creating {difficulty} level True/False questions for students.
+You are an expert professor creating {difficulty.upper()} level True/False questions.
 
-Generate exactly {num_questions} True/False questions from the text.
+{difficulty_instructions[difficulty]}
 
-STRICTLY FORBIDDEN:
-- Email addresses, contact info, author names
-- Institution names, dates of publication
-- Any document metadata
+Generate EXACTLY {num_questions} True/False statements at {difficulty} level.
 
-ONLY ASK ABOUT subject concepts, processes, definitions, facts.
+RULES:
+- Follow the {difficulty} level rules strictly
+- Mix of True and False answers (roughly 50/50)
+- NEVER ask about emails, authors, institutions, dates or document metadata
+- Each statement must test a DIFFERENT concept
 
 Return ONLY a valid JSON array:
-- "question": a clear statement that is either true or false
+- "question": a clear statement (true or false)
 - "answer": exactly "True" or "False"
 - "explanation": why the statement is true or false
 - "difficulty": "{difficulty}"
@@ -105,31 +129,61 @@ Text:
 Return ONLY the JSON array. No extra text. No markdown.
 """
     response = llm.invoke([
-        SystemMessage(content="You are a True/False question generator. Output only valid JSON arrays."),
+        SystemMessage(content=f"You are a {difficulty} level True/False generator. Output only valid JSON arrays."),
         HumanMessage(content=prompt)
     ])
     return parse_json(response.content.strip())
 
+
 def generate_fill_blanks(text: str, num_questions: int, difficulty: str = "Medium") -> list:
-    """Generate Fill in the Blank questions."""
+    """Generate Fill in the Blank questions with strict difficulty."""
     llm = get_llm()
+
+    difficulty_instructions = {
+        "Easy": """
+EASY LEVEL:
+- Blank should be a KEY TERM or SIMPLE WORD directly from the text
+- The sentence makes it very obvious what word goes in the blank
+- Example: "_____ Intelligence is the simulation of human intelligence by computers."
+- Hint should almost give away the answer
+- One word answers only
+""",
+        "Medium": """
+MEDIUM LEVEL:
+- Blank should be a CONCEPT or PROCESS name
+- Requires understanding of the topic to fill correctly
+- Example: "The process by which machines learn from data without explicit programming is called _____."
+- Hint should be helpful but not give it away
+- One or two word answers
+""",
+        "Hard": """
+HARD LEVEL:
+- Blank should be a SPECIFIC TECHNICAL TERM or COMPLEX CONCEPT
+- Multiple words in the sentence could fit but only one is technically correct
+- Example: "In neural networks, the _____ layer is responsible for extracting spatial hierarchies from images."
+- Hint should be cryptic and challenging
+- Requires deep knowledge to answer correctly
+"""
+    }
+
     prompt = f"""
-You are an expert educator creating {difficulty} level Fill-in-the-Blank questions for students.
+You are an expert professor creating {difficulty.upper()} level Fill-in-the-Blank questions.
 
-Generate exactly {num_questions} fill-in-the-blank questions from the text.
+{difficulty_instructions[difficulty]}
 
-STRICTLY FORBIDDEN:
-- Email addresses, contact info, author names
-- Institution names, dates of publication
-- Any document metadata
+Generate EXACTLY {num_questions} fill-in-the-blank questions at {difficulty} level.
 
-ONLY focus on subject concepts, key terms, processes, definitions.
+RULES:
+- Follow {difficulty} level rules strictly
+- Use _____ to indicate the blank
+- NEVER ask about emails, authors, institutions, dates or document metadata
+- Each question must test a DIFFERENT concept
 
 Return ONLY a valid JSON array:
-- "question": sentence with _____ where the answer goes
-- "answer": the correct word or phrase that fills the blank
-- "hint": a helpful hint for the student
-- "explanation": brief explanation of the answer
+- "question": sentence with _____ for the blank
+- "answer": correct word or phrase
+- "hint": helpful hint for the student
+- "explanation": why this is the correct answer
 - "difficulty": "{difficulty}"
 
 Text:
@@ -138,49 +192,7 @@ Text:
 Return ONLY the JSON array. No extra text. No markdown.
 """
     response = llm.invoke([
-        SystemMessage(content="You are a fill-in-the-blank question generator. Output only valid JSON arrays."),
+        SystemMessage(content=f"You are a {difficulty} level fill-in-the-blank generator. Output only valid JSON arrays."),
         HumanMessage(content=prompt)
     ])
     return parse_json(response.content.strip())
-
-def generate_flashcards(text: str, num_cards: int) -> list:
-    """Generate flashcards from text."""
-    llm = get_llm()
-    prompt = f"""
-You are an expert educator. Generate exactly {num_cards} flashcards from the text below.
-
-Return ONLY a valid JSON array. Each object must have:
-- "front": a concise question or key term
-- "back": a clear complete answer or definition
-
-Only include educationally valuable content.
-Do NOT include emails, author names, dates, or any document metadata.
-
-Text:
-{text[:3000]}
-
-Return ONLY the JSON array. No extra text. No markdown.
-"""
-    response = llm.invoke([
-        SystemMessage(content="You are a flashcard generator. Output only valid JSON arrays."),
-        HumanMessage(content=prompt)
-    ])
-    return parse_json(response.content.strip())
-
-def chat_with_doc(text: str, question: str, history: list) -> str:
-    """Answer questions about the document."""
-    llm = get_llm()
-    messages = [
-        SystemMessage(content=f"""You are a helpful study assistant.
-Answer ONLY based on the document below.
-If the answer is not in the document, say: 'I could not find that in the document.'
-
-Document:
-{text[:4000]}""")
-    ]
-    for h in history[-3:]:
-        messages.append(HumanMessage(content=h["user"]))
-        messages.append(AIMessage(content=h["assistant"]))
-    messages.append(HumanMessage(content=question))
-    response = llm.invoke(messages)
-    return response.content
