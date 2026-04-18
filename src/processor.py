@@ -14,13 +14,30 @@ def extract_text_from_pdf(uploaded_file) -> str:
 def extract_text_from_txt(uploaded_file) -> str:
     return uploaded_file.read().decode("utf-8")
 
+def extract_text_from_docx(uploaded_file) -> str:
+    try:
+        import docx
+        doc = docx.Document(io.BytesIO(uploaded_file.read()))
+        text = ""
+        for para in doc.paragraphs:
+            if para.text.strip():
+                text += para.text + "\n"
+        return text.strip()
+    except Exception as e:
+        return f"Error reading DOCX: {e}"
+
 def process_file(uploaded_file) -> str:
-    if uploaded_file.type == "application/pdf":
+    file_type = uploaded_file.type
+    name = uploaded_file.name.lower()
+
+    if file_type == "application/pdf" or name.endswith(".pdf"):
         return extract_text_from_pdf(uploaded_file)
-    elif uploaded_file.type == "text/plain":
+    elif file_type == "text/plain" or name.endswith(".txt"):
         return extract_text_from_txt(uploaded_file)
+    elif name.endswith(".docx") or "word" in file_type:
+        return extract_text_from_docx(uploaded_file)
     else:
-        raise ValueError(f"Unsupported file type: {uploaded_file.type}")
+        raise ValueError(f"Unsupported file type: {file_type}")
 
 def chunk_text(text: str, chunk_size: int = 2000) -> list:
     words = text.split()
