@@ -97,74 +97,39 @@ section[data-testid="stSidebar"] .stRadio label {
 .feature-title { font-size: 1.1em; font-weight: 800; color: #1a1a2e; }
 .feature-desc { font-size: 0.88em; color: #6b7280; margin-top: 4px; }
 
-/* XP and streak */
 .xp-card {
     background: linear-gradient(135deg, #667eea, #764ba2);
-    border-radius: 20px;
-    padding: 20px;
-    text-align: center;
-    color: white;
+    border-radius: 20px; padding: 20px;
+    text-align: center; color: white;
 }
 .xp-number { font-size: 2.5em; font-weight: 900; }
 .xp-label { font-size: 0.85em; opacity: 0.85; margin-top: 4px; }
 
 .streak-card {
     background: linear-gradient(135deg, #f5576c, #f093fb);
-    border-radius: 20px;
-    padding: 20px;
-    text-align: center;
-    color: white;
+    border-radius: 20px; padding: 20px;
+    text-align: center; color: white;
 }
 
-/* Confidence buttons */
-.conf-know {
-    background: linear-gradient(135deg, #28a745, #20c997);
-    border-radius: 14px; padding: 14px;
-    text-align: center; color: white;
-    font-weight: 800; cursor: pointer;
-}
-.conf-almost {
-    background: linear-gradient(135deg, #ffc107, #fd7e14);
-    border-radius: 14px; padding: 14px;
-    text-align: center; color: white;
-    font-weight: 800; cursor: pointer;
-}
-.conf-noidea {
-    background: linear-gradient(135deg, #dc3545, #c82333);
-    border-radius: 14px; padding: 14px;
-    text-align: center; color: white;
-    font-weight: 800; cursor: pointer;
-}
-
-/* Study content cards */
 .content-card {
-    background: white;
-    border-radius: 16px;
-    padding: 20px 24px;
-    margin: 10px 0;
+    background: white; border-radius: 16px;
+    padding: 20px 24px; margin: 10px 0;
     box-shadow: 0 3px 15px rgba(102,126,234,0.1);
     border-left: 5px solid var(--accent, #667eea);
 }
 
 .quiz-card {
-    background: white;
-    border-radius: 16px;
-    padding: 22px 26px;
-    margin: 14px 0;
+    background: white; border-radius: 16px;
+    padding: 22px 26px; margin: 14px 0;
     box-shadow: 0 2px 15px rgba(102,126,234,0.1);
     border-left: 5px solid #667eea;
 }
-
 .quiz-number {
     font-family: 'Fira Code', monospace;
-    font-size: 0.72em;
-    color: #667eea;
-    font-weight: 600;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    margin-bottom: 8px;
+    font-size: 0.72em; color: #667eea;
+    font-weight: 600; letter-spacing: 2px;
+    text-transform: uppercase; margin-bottom: 8px;
 }
-
 .quiz-question { font-size: 1.1em; font-weight: 700; color: #1a1a2e; line-height: 1.5; }
 
 .badge-correct {
@@ -196,7 +161,8 @@ section[data-testid="stSidebar"] .stRadio label {
 .score-display {
     background: linear-gradient(135deg,#667eea,#764ba2);
     border-radius: 24px; padding: 40px;
-    text-align: center; box-shadow: 0 10px 40px rgba(102,126,234,0.35);
+    text-align: center;
+    box-shadow: 0 10px 40px rgba(102,126,234,0.35);
 }
 .score-number { font-size: 5em; font-weight: 900; color: white; line-height: 1; }
 .score-label { color: rgba(255,255,255,0.8); font-size: 1.1em; font-weight: 600; margin-top: 10px; }
@@ -216,6 +182,22 @@ section[data-testid="stSidebar"] .stRadio label {
     color: white; min-height: 180px;
     display: flex; align-items: center; justify-content: center;
     box-shadow: 0 15px 50px rgba(17,153,142,0.25); margin-top: 16px;
+}
+
+.conf-know {
+    background: linear-gradient(135deg,#28a745,#20c997);
+    border-radius: 14px; padding: 14px;
+    text-align: center; color: white; font-weight: 800;
+}
+.conf-almost {
+    background: linear-gradient(135deg,#ffc107,#fd7e14);
+    border-radius: 14px; padding: 14px;
+    text-align: center; color: white; font-weight: 800;
+}
+.conf-noidea {
+    background: linear-gradient(135deg,#dc3545,#c82333);
+    border-radius: 14px; padding: 14px;
+    text-align: center; color: white; font-weight: 800;
 }
 
 .chat-user {
@@ -243,8 +225,7 @@ section[data-testid="stSidebar"] .stRadio label {
     font-size: 3em; font-weight: 900;
     background: linear-gradient(135deg,#667eea,#f093fb);
     -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    -webkit-text-fill-color: transparent; background-clip: text;
 }
 .stat-label {
     color: #6b7280; font-size: 0.9em; font-weight: 700;
@@ -330,6 +311,10 @@ section[data-testid="stSidebar"] .stRadio label {
     color: white !important;
     box-shadow: 0 4px 15px rgba(102,126,234,0.4) !important;
 }
+.stButton > button[kind="primary"]:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 25px rgba(102,126,234,0.5) !important;
+}
 [data-testid="metric-container"] {
     background: white !important;
     border-radius: 16px !important;
@@ -339,6 +324,14 @@ section[data-testid="stSidebar"] .stRadio label {
 hr { border-color: rgba(102,126,234,0.15) !important; }
 </style>
 """, unsafe_allow_html=True)
+
+# ── Helper: Home Button ───────────────────────────────────────────────────
+def home_button():
+    col1, col2 = st.columns([1, 6])
+    with col1:
+        if st.button("🏠 Home", key=f"home_{page}", use_container_width=True):
+            st.query_params["page"] = "🏠 Home"
+            st.rerun()
 
 # ── Session State ─────────────────────────────────────────────────────────
 defaults = {
@@ -373,12 +366,12 @@ with st.sidebar:
         st.session_state["selected_lang"] = lang_name
         st.divider()
 
-    # XP display in sidebar
     total_xp = get_total_xp()
     streak = get_streak_count()
     level = total_xp // 100 + 1
     st.markdown(f"""
-    <div style="background:rgba(255,255,255,0.15);border-radius:14px;padding:12px;margin-bottom:8px;text-align:center">
+    <div style="background:rgba(255,255,255,0.15);border-radius:14px;padding:12px;
+                margin-bottom:8px;text-align:center">
         <div style="font-size:1.4em;font-weight:900">⚡ {total_xp} XP</div>
         <div style="font-size:0.8em;opacity:0.85">Level {level} · 🔥 {streak} day streak</div>
     </div>
@@ -399,7 +392,8 @@ with st.sidebar:
     if st.session_state["doc_name"]:
         st.markdown(f"""
         <div class="doc-loaded">
-            <div style="font-size:0.7em;font-weight:800;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px">✅ Loaded</div>
+            <div style="font-size:0.7em;font-weight:800;letter-spacing:2px;
+                        text-transform:uppercase;margin-bottom:4px">✅ Loaded</div>
             <div style="font-weight:700;font-size:0.95em">{st.session_state["doc_name"]}</div>
             <div style="font-size:0.8em;opacity:0.8">{len(st.session_state["doc_text"]):,} chars</div>
         </div>
@@ -407,12 +401,17 @@ with st.sidebar:
     else:
         st.markdown("""
         <div class="doc-not-loaded">
-            <div style="font-size:0.7em;font-weight:800;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px">⚠️ No Document</div>
+            <div style="font-size:0.7em;font-weight:800;letter-spacing:2px;
+                        text-transform:uppercase;margin-bottom:4px">⚠️ No Document</div>
             <div style="font-size:0.85em;opacity:0.8">Upload a document first</div>
         </div>
         """, unsafe_allow_html=True)
 
     st.divider()
+    if st.button("🏠 Go to Home", use_container_width=True, type="primary"):
+        st.query_params["page"] = "🏠 Home"
+        st.rerun()
+
     if st.button("🗑️ Clear Everything", use_container_width=True):
         for k, v in defaults.items():
             st.session_state[k] = v
@@ -423,8 +422,10 @@ with st.sidebar:
 # HOME
 # ═══════════════════════════════════════════════════════════════════════════
 if page == "🏠 Home":
-    st.markdown('<div class="hero-title">Learn Smarter,<br>Not Harder! 🚀</div>', unsafe_allow_html=True)
-    st.markdown('<div class="hero-sub">Upload any document → AI generates quizzes, flashcards, study notes & more ✨</div>', unsafe_allow_html=True)
+    st.markdown('<div class="hero-title">Learn Smarter,<br>Not Harder! 🚀</div>',
+                unsafe_allow_html=True)
+    st.markdown('<div class="hero-sub">Upload any document → AI generates quizzes, flashcards, study notes & more ✨</div>',
+                unsafe_allow_html=True)
 
     col1, col2, col3, col4, col5 = st.columns(5)
     cards_data = [
@@ -434,7 +435,9 @@ if page == "🏠 Home":
         ("📚", "Study Notes", "AI summary + mind map", "linear-gradient(90deg,#43e97b,#38f9d7)", "📚 Study Content"),
         ("📊", "Progress", "XP + streaks + stats", "linear-gradient(90deg,#fa709a,#fee140)", "📊 Progress"),
     ]
-    for col, (icon, title, desc, color, target) in zip([col1,col2,col3,col4,col5], cards_data):
+    for col, (icon, title, desc, color, target) in zip(
+        [col1, col2, col3, col4, col5], cards_data
+    ):
         with col:
             st.markdown(f"""
             <div class="feature-card" style="--card-color:{color}">
@@ -453,11 +456,11 @@ if page == "🏠 Home":
     with col1:
         st.markdown("### 🚀 How it works")
         for num, icon, text in [
-            ("1","📤","Upload PDF, TXT or DOCX file"),
-            ("2","📚","Get AI study notes instantly"),
-            ("3","📝","Take quiz with difficulty levels"),
-            ("4","🃏","Review flashcards with confidence rating"),
-            ("5","📊","Track XP, streaks and progress"),
+            ("1", "📤", "Upload PDF, TXT or DOCX file"),
+            ("2", "📚", "Get AI study notes instantly"),
+            ("3", "📝", "Take quiz with difficulty levels"),
+            ("4", "🃏", "Review flashcards with confidence"),
+            ("5", "📊", "Track XP, streaks and progress"),
         ]:
             st.markdown(f"""
             <div class="step-card">
@@ -466,14 +469,13 @@ if page == "🏠 Home":
                 <div style="font-weight:700;color:#1a1a2e">{text}</div>
             </div>
             """, unsafe_allow_html=True)
+
     with col2:
         st.markdown("### 🏆 Your Stats")
         total_xp = get_total_xp()
         streak = get_streak_count()
         results = get_quiz_results()
         level = total_xp // 100 + 1
-        next_level_xp = level * 100
-        progress_pct = (total_xp % 100) / 100
 
         st.markdown(f"""
         <div class="xp-card">
@@ -481,7 +483,7 @@ if page == "🏠 Home":
             <div class="xp-label">Level {level} Scholar</div>
         </div>
         """, unsafe_allow_html=True)
-        st.progress(progress_pct)
+        st.progress((total_xp % 100) / 100)
         st.caption(f"{total_xp % 100}/100 XP to Level {level+1}")
 
         c1, c2 = st.columns(2)
@@ -494,16 +496,18 @@ if page == "🏠 Home":
             """, unsafe_allow_html=True)
         with c2:
             st.markdown(f"""
-            <div style="background:linear-gradient(135deg,#4facfe,#00f2fe);border-radius:20px;padding:20px;text-align:center;color:white">
+            <div style="background:linear-gradient(135deg,#4facfe,#00f2fe);
+                        border-radius:20px;padding:20px;text-align:center;color:white">
                 <div style="font-size:2em;font-weight:900">📝 {len(results)}</div>
                 <div style="font-size:0.85em;opacity:0.85">Quizzes Done</div>
             </div>
             """, unsafe_allow_html=True)
 
 # ═══════════════════════════════════════════════════════════════════════════
-# UPLOAD — supports PDF, TXT, DOCX
+# UPLOAD
 # ═══════════════════════════════════════════════════════════════════════════
 elif page == "📤 Upload Document":
+    home_button()
     st.markdown('<div class="hero-title">📤 Upload Document</div>', unsafe_allow_html=True)
     st.markdown('<div class="hero-sub">Supports PDF, TXT and DOCX files</div>', unsafe_allow_html=True)
     st.divider()
@@ -535,11 +539,8 @@ elif page == "📤 Upload Document":
         """, unsafe_allow_html=True)
 
     st.divider()
-    uploaded = st.file_uploader(
-        "Drop file here",
-        type=["pdf", "txt", "docx"],
-        label_visibility="collapsed"
-    )
+    uploaded = st.file_uploader("Drop file here", type=["pdf","txt","docx"],
+                                label_visibility="collapsed")
 
     if uploaded:
         with st.spinner("⚙️ Processing your document..."):
@@ -583,11 +584,13 @@ elif page == "📤 Upload Document":
                 st.error(f"❌ Error: {e}")
 
 # ═══════════════════════════════════════════════════════════════════════════
-# STUDY CONTENT — unique AI generated study materials
+# STUDY CONTENT
 # ═══════════════════════════════════════════════════════════════════════════
 elif page == "📚 Study Content":
+    home_button()
     st.markdown('<div class="hero-title">📚 Study Content</div>', unsafe_allow_html=True)
-    st.markdown('<div class="hero-sub">AI generates summary, key points, mind map and exam tips</div>', unsafe_allow_html=True)
+    st.markdown('<div class="hero-sub">AI generates summary, key points, mind map and exam tips</div>',
+                unsafe_allow_html=True)
     st.divider()
 
     if not st.session_state["doc_text"]:
@@ -610,7 +613,6 @@ elif page == "📚 Study Content":
         content = st.session_state["study_content"]
         st.divider()
 
-        # One liner
         if "one_liner" in content:
             st.markdown(f"""
             <div style="background:linear-gradient(135deg,#667eea,#764ba2);
@@ -621,19 +623,16 @@ elif page == "📚 Study Content":
             """, unsafe_allow_html=True)
 
         col1, col2 = st.columns(2)
-
         with col1:
-            # Summary
             st.markdown("### 📖 Summary")
             st.markdown(f"""
             <div class="content-card" style="--accent:#667eea">
-                {content.get("summary", "No summary available")}
+                {content.get("summary","")}
             </div>
             """, unsafe_allow_html=True)
 
-            # Key Points
             st.markdown("### 🎯 Key Points")
-            for i, point in enumerate(content.get("key_points", []), 1):
+            for i, point in enumerate(content.get("key_points",[]), 1):
                 st.markdown(f"""
                 <div style="background:white;border-radius:12px;padding:12px 16px;
                             margin:6px 0;box-shadow:0 2px 10px rgba(102,126,234,0.1);
@@ -643,9 +642,8 @@ elif page == "📚 Study Content":
                 """, unsafe_allow_html=True)
 
         with col2:
-            # Exam Tips
             st.markdown("### 📝 Exam Tips")
-            for tip in content.get("exam_tips", []):
+            for tip in content.get("exam_tips",[]):
                 st.markdown(f"""
                 <div style="background:white;border-radius:12px;padding:12px 16px;
                             margin:6px 0;box-shadow:0 2px 10px rgba(102,126,234,0.1);
@@ -654,9 +652,8 @@ elif page == "📚 Study Content":
                 </div>
                 """, unsafe_allow_html=True)
 
-            # Difficult Terms
             st.markdown("### 📖 Key Terms")
-            for term in content.get("difficult_terms", []):
+            for term in content.get("difficult_terms",[]):
                 st.markdown(f"""
                 <div style="background:white;border-radius:12px;padding:12px 16px;
                             margin:6px 0;box-shadow:0 2px 10px rgba(102,126,234,0.1);
@@ -665,9 +662,8 @@ elif page == "📚 Study Content":
                 </div>
                 """, unsafe_allow_html=True)
 
-        # Mind Map
         st.markdown("### 🗺️ Mind Map")
-        mind_map = content.get("mind_map", {})
+        mind_map = content.get("mind_map",{})
         for main_topic, subtopics in mind_map.items():
             st.markdown(f"""
             <div style="background:linear-gradient(135deg,#667eea,#764ba2);
@@ -687,12 +683,30 @@ elif page == "📚 Study Content":
                     </div>
                     """, unsafe_allow_html=True)
 
+        st.divider()
+        st.markdown("### What's next?")
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            if st.button("📝 Take Quiz", use_container_width=True, type="primary"):
+                st.query_params["page"] = "📝 Generate Quiz"
+                st.rerun()
+        with c2:
+            if st.button("🃏 Flashcards", use_container_width=True, type="primary"):
+                st.query_params["page"] = "🃏 Flashcards"
+                st.rerun()
+        with c3:
+            if st.button("💬 Chat with Doc", use_container_width=True, type="primary"):
+                st.query_params["page"] = "💬 Chat with Doc"
+                st.rerun()
+
 # ═══════════════════════════════════════════════════════════════════════════
 # QUIZ
 # ═══════════════════════════════════════════════════════════════════════════
 elif page == "📝 Generate Quiz":
+    home_button()
     st.markdown('<div class="hero-title">📝 Quiz Generator</div>', unsafe_allow_html=True)
-    st.markdown('<div class="hero-sub">Choose your quiz type and difficulty level</div>', unsafe_allow_html=True)
+    st.markdown('<div class="hero-sub">Choose your quiz type and difficulty level</div>',
+                unsafe_allow_html=True)
     st.divider()
 
     if not st.session_state["doc_text"]:
@@ -702,7 +716,6 @@ elif page == "📝 Generate Quiz":
             st.rerun()
         st.stop()
 
-    # Quiz Type
     st.markdown("### 📋 Select Quiz Type")
     t1, t2, t3 = st.columns(3)
     for col, qtype, icon, desc in zip(
@@ -712,18 +725,21 @@ elif page == "📝 Generate Quiz":
         ["Multiple Choice", "True or False", "Complete the sentence"]
     ):
         with col:
+            selected = st.session_state["quiz_type"] == qtype
             st.markdown(f"""
             <div style="background:white;border-radius:16px;padding:20px;
                         text-align:center;box-shadow:0 3px 15px rgba(102,126,234,0.1);
-                        border:3px solid {'#667eea' if st.session_state['quiz_type']==qtype else 'transparent'}">
+                        border:3px solid {'#667eea' if selected else 'transparent'}">
                 <div style="font-size:2em">{icon}</div>
                 <div style="font-weight:800;margin-top:6px">{qtype}</div>
                 <div style="color:#6b7280;font-size:0.85em">{desc}</div>
             </div>
             """, unsafe_allow_html=True)
-            if st.button(f"{'✅ Selected' if st.session_state['quiz_type']==qtype else 'Select'}",
-                        key=f"sel_{qtype}", use_container_width=True,
-                        type="primary" if st.session_state["quiz_type"]==qtype else "secondary"):
+            if st.button(
+                f"{'✅ Selected' if selected else 'Select'}",
+                key=f"sel_{qtype}", use_container_width=True,
+                type="primary" if selected else "secondary"
+            ):
                 st.session_state["quiz_type"] = qtype
                 st.rerun()
 
@@ -744,7 +760,11 @@ elif page == "📝 Generate Quiz":
         gen = st.button("⚡ Go!", type="primary", use_container_width=True)
 
     badge_cls = {"Easy":"badge-easy","Medium":"badge-medium","Hard":"badge-hard"}
-    st.markdown(f'<span class="{badge_cls[difficulty]}">🎯 {difficulty}</span> &nbsp; <span style="color:#6b7280;font-size:0.9em">Type: {st.session_state["quiz_type"]}</span>', unsafe_allow_html=True)
+    st.markdown(
+        f'<span class="{badge_cls[difficulty]}">🎯 {difficulty}</span> &nbsp;'
+        f'<span style="color:#6b7280;font-size:0.9em">Type: {st.session_state["quiz_type"]}</span>',
+        unsafe_allow_html=True
+    )
 
     if gen:
         with st.spinner(f"🤖 Generating {st.session_state['quiz_type']} ({difficulty})..."):
@@ -824,11 +844,22 @@ elif page == "📝 Generate Quiz":
         st.markdown(f"""
         <div class="score-display">
             <div class="score-number">{pct:.0f}%</div>
-            <div class="score-label">🎯 {score}/{total} correct · {diff} · +{xp_earned} XP earned!</div>
+            <div class="score-label">🎯 {score}/{total} correct · {diff} · +{xp_earned} XP!</div>
         </div>
         """, unsafe_allow_html=True)
         if pct >= 80:
             st.balloons()
+        st.write("")
+        c1, c2 = st.columns(2)
+        with c1:
+            if st.button("🏠 Back to Home", use_container_width=True, type="primary",
+                        key="score_home"):
+                st.query_params["page"] = "🏠 Home"
+                st.rerun()
+        with c2:
+            if st.button("📊 View Progress", use_container_width=True, key="score_progress"):
+                st.query_params["page"] = "📊 Progress"
+                st.rerun()
 
     # MCQ
     if st.session_state["quiz_type"] == "MCQ" and st.session_state["quiz_questions"]:
@@ -866,7 +897,6 @@ elif page == "📝 Generate Quiz":
                 st.session_state["quiz_score"] = score
                 st.session_state["quiz_submitted"] = True
                 st.session_state["timer_active"] = False
-                show_score(score, len(questions), "MCQ", diff)
                 st.rerun()
         else:
             show_score(st.session_state["quiz_score"], len(questions), "MCQ", diff)
@@ -911,7 +941,6 @@ elif page == "📝 Generate Quiz":
                 st.session_state["tf_score"] = score
                 st.session_state["tf_submitted"] = True
                 st.session_state["timer_active"] = False
-                show_score(score, len(questions), "True/False", diff)
                 st.rerun()
         else:
             show_score(st.session_state["tf_score"], len(questions), "True/False", diff)
@@ -961,7 +990,6 @@ elif page == "📝 Generate Quiz":
                 st.session_state["fb_score"] = score
                 st.session_state["fb_submitted"] = True
                 st.session_state["timer_active"] = False
-                show_score(score, len(questions), "Fill Blanks", diff)
                 st.rerun()
         else:
             show_score(st.session_state["fb_score"], len(questions), "Fill Blanks", diff)
@@ -971,11 +999,13 @@ elif page == "📝 Generate Quiz":
                 st.rerun()
 
 # ═══════════════════════════════════════════════════════════════════════════
-# FLASHCARDS — with confidence rating
+# FLASHCARDS
 # ═══════════════════════════════════════════════════════════════════════════
 elif page == "🃏 Flashcards":
+    home_button()
     st.markdown('<div class="hero-title">🃏 Smart Flashcards</div>', unsafe_allow_html=True)
-    st.markdown('<div class="hero-sub">Rate your confidence to earn XP and track weak areas</div>', unsafe_allow_html=True)
+    st.markdown('<div class="hero-sub">Rate your confidence to earn XP and track weak areas</div>',
+                unsafe_allow_html=True)
     st.divider()
 
     if not st.session_state["doc_text"]:
@@ -1003,7 +1033,7 @@ elif page == "🃏 Flashcards":
                 st.session_state["flashcards"] = cards
                 st.session_state["fc_index"] = 0
                 st.session_state["fc_flipped"] = False
-                st.session_state["fc_confidence"] = [None] * len(cards)
+                st.session_state["fc_confidence"] = [None]*len(cards)
                 st.success(f"✅ {len(cards)} smart flashcards ready!")
             except Exception as e:
                 st.error(f"❌ Error: {e}")
@@ -1015,7 +1045,6 @@ elif page == "🃏 Flashcards":
         card = cards[idx]
         confidence_list = st.session_state["fc_confidence"]
 
-        # Progress
         rated = sum(1 for c in confidence_list if c is not None)
         st.markdown(f"**Card {idx+1} of {len(cards)}** · {rated}/{len(cards)} rated")
         st.progress((idx+1)/len(cards))
@@ -1038,7 +1067,6 @@ elif page == "🃏 Flashcards":
                     if ab:
                         st.markdown(get_audio_html(ab), unsafe_allow_html=True)
 
-                # Confidence rating
                 st.divider()
                 st.markdown("**How well did you know this?**")
                 c1, c2, c3 = st.columns(3)
@@ -1072,7 +1100,6 @@ elif page == "🃏 Flashcards":
                     st.session_state["fc_flipped"] = True
                     st.rerun()
 
-            # Navigation
             st.write("")
             b1, b2 = st.columns(2)
             with b1:
@@ -1088,40 +1115,29 @@ elif page == "🃏 Flashcards":
                         st.session_state["fc_flipped"] = False
                         st.rerun()
 
-        # Confidence summary
         if rated > 0:
             st.divider()
-            st.markdown("### 📊 Your Confidence Summary")
+            st.markdown("### 📊 Confidence Summary")
             stats = {}
             for c in confidence_list:
                 if c:
                     stats[c] = stats.get(c, 0) + 1
             c1, c2, c3 = st.columns(3)
             with c1:
-                st.markdown(f"""
-                <div class="conf-know">
-                    😎 Know it<br><b style="font-size:1.5em">{stats.get("Know it",0)}</b>
-                </div>
-                """, unsafe_allow_html=True)
+                st.markdown(f'<div class="conf-know">😎 Know it<br><b style="font-size:1.5em">{stats.get("Know it",0)}</b></div>', unsafe_allow_html=True)
             with c2:
-                st.markdown(f"""
-                <div class="conf-almost">
-                    🤔 Almost<br><b style="font-size:1.5em">{stats.get("Almost",0)}</b>
-                </div>
-                """, unsafe_allow_html=True)
+                st.markdown(f'<div class="conf-almost">🤔 Almost<br><b style="font-size:1.5em">{stats.get("Almost",0)}</b></div>', unsafe_allow_html=True)
             with c3:
-                st.markdown(f"""
-                <div class="conf-noidea">
-                    😅 No idea<br><b style="font-size:1.5em">{stats.get("No idea",0)}</b>
-                </div>
-                """, unsafe_allow_html=True)
+                st.markdown(f'<div class="conf-noidea">😅 No idea<br><b style="font-size:1.5em">{stats.get("No idea",0)}</b></div>', unsafe_allow_html=True)
 
 # ═══════════════════════════════════════════════════════════════════════════
 # CHAT
 # ═══════════════════════════════════════════════════════════════════════════
 elif page == "💬 Chat with Doc":
+    home_button()
     st.markdown('<div class="hero-title">💬 Chat with Doc</div>', unsafe_allow_html=True)
-    st.markdown('<div class="hero-sub">Ask anything — answers come from your document</div>', unsafe_allow_html=True)
+    st.markdown('<div class="hero-sub">Ask anything — answers come from your document</div>',
+                unsafe_allow_html=True)
     st.divider()
 
     if not st.session_state["doc_text"]:
@@ -1160,11 +1176,13 @@ elif page == "💬 Chat with Doc":
             st.rerun()
 
 # ═══════════════════════════════════════════════════════════════════════════
-# PROGRESS — XP + Streaks + Stats
+# PROGRESS
 # ═══════════════════════════════════════════════════════════════════════════
 elif page == "📊 Progress":
+    home_button()
     st.markdown('<div class="hero-title">📊 Your Progress</div>', unsafe_allow_html=True)
-    st.markdown('<div class="hero-sub">Track XP, streaks, scores and confidence</div>', unsafe_allow_html=True)
+    st.markdown('<div class="hero-sub">Track XP, streaks, scores and confidence</div>',
+                unsafe_allow_html=True)
     st.divider()
 
     total_xp = get_total_xp()
@@ -1173,7 +1191,6 @@ elif page == "📊 Progress":
     level = total_xp // 100 + 1
     conf_stats = get_flashcard_confidence_stats()
 
-    # Top stats
     col1, col2, col3, col4 = st.columns(4)
     with col1:
         st.markdown(f'<div class="xp-card"><div class="xp-number">⚡ {total_xp}</div><div class="xp-label">Total XP · Level {level}</div></div>', unsafe_allow_html=True)
@@ -1185,19 +1202,19 @@ elif page == "📊 Progress":
     with col4:
         st.markdown(f'<div class="stat-card"><div class="stat-number">{len(results)}</div><div class="stat-label">Quizzes Taken</div></div>', unsafe_allow_html=True)
 
-    # XP Progress
     st.divider()
     st.markdown(f"### ⚡ Level {level} Progress")
     st.progress((total_xp % 100) / 100)
     st.caption(f"{total_xp % 100}/100 XP to reach Level {level+1}")
 
     col1, col2 = st.columns(2)
-
     with col1:
-        # Quiz results
         st.markdown("### 📝 Recent Quiz Results")
         if not results:
             st.info("No quizzes taken yet!")
+            if st.button("📝 Take a Quiz", type="primary"):
+                st.query_params["page"] = "📝 Generate Quiz"
+                st.rerun()
         for r in results[:8]:
             pct = r[1]/r[2]*100
             color = "#28a745" if pct >= 70 else "#ffc107" if pct >= 50 else "#dc3545"
@@ -1218,16 +1235,17 @@ elif page == "📊 Progress":
                     </div>
                     <b style='color:{color};font-size:1.2em'>{pct:.0f}%</b>
                 </div>
-                <div style='color:#6b7280;font-size:0.8em;margin-top:4px'>{r[0][:16]} · {r[1]}/{r[2]} correct</div>
+                <div style='color:#6b7280;font-size:0.8em;margin-top:4px'>
+                    {r[0][:16]} · {r[1]}/{r[2]} correct
+                </div>
             </div>
             """, unsafe_allow_html=True)
 
     with col2:
-        # Flashcard confidence
         st.markdown("### 🃏 Flashcard Confidence")
         total_cards = sum(conf_stats.values()) if conf_stats else 0
         if total_cards == 0:
-            st.info("Review some flashcards to see confidence stats!")
+            st.info("Review flashcards to see confidence stats!")
         else:
             for label, icon, color in [
                 ("Know it","😎","#28a745"),
@@ -1242,7 +1260,7 @@ elif page == "📊 Progress":
                             border-left:5px solid {color}'>
                     <div style='display:flex;justify-content:space-between'>
                         <span>{icon} {label}</span>
-                        <b style='color:{color}'>{count} cards ({pct:.0f}%)</b>
+                        <b style='color:{color}'>{count} ({pct:.0f}%)</b>
                     </div>
                     <div style='background:#f0f0f0;border-radius:8px;height:8px;margin-top:8px'>
                         <div style='background:{color};height:8px;border-radius:8px;width:{pct}%'></div>
@@ -1250,16 +1268,15 @@ elif page == "📊 Progress":
                 </div>
                 """, unsafe_allow_html=True)
 
-        # Study Streak Calendar
         st.markdown("### 📅 Study Activity")
         streak_data = get_study_streak()
         if streak_data:
-            for date, xp in streak_data[:7]:
+            for study_date, xp in streak_data[:7]:
                 st.markdown(f"""
                 <div style='background:white;border-radius:10px;padding:10px 16px;
                             margin:4px 0;box-shadow:0 2px 10px rgba(102,126,234,0.08);
                             display:flex;justify-content:space-between'>
-                    <span style='color:#6b7280'>📅 {date}</span>
+                    <span style='color:#6b7280'>📅 {study_date}</span>
                     <span style='color:#667eea;font-weight:800'>+{xp} XP</span>
                 </div>
                 """, unsafe_allow_html=True)
