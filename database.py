@@ -1,6 +1,6 @@
 import sqlite3
 import json
-from datetime import datetime
+from datetime import datetime, date, timedelta
 
 DB_PATH = "study_assistant.db"
 
@@ -36,8 +36,23 @@ def init_db():
             quiz_id INTEGER,
             score INTEGER,
             total INTEGER,
+            quiz_type TEXT DEFAULT 'MCQ',
+            difficulty TEXT DEFAULT 'Medium',
             taken_at TEXT NOT NULL,
             FOREIGN KEY (quiz_id) REFERENCES quizzes(id)
+        );
+
+        CREATE TABLE IF NOT EXISTS flashcard_progress (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            card_front TEXT NOT NULL,
+            confidence TEXT NOT NULL,
+            reviewed_at TEXT NOT NULL
+        );
+
+        CREATE TABLE IF NOT EXISTS study_streak (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            study_date TEXT NOT NULL UNIQUE,
+            xp_earned INTEGER DEFAULT 0
         );
     """)
     conn.commit()
@@ -79,13 +94,43 @@ def save_flashcards(document_id: int, cards: list) -> int:
     conn.close()
     return card_id
 
-def save_quiz_result(quiz_id: int, score: int, total: int):
+def save_quiz_result(quiz_id: int, score: int, total: int,
+                     quiz_type: str = "MCQ", difficulty: str = "Medium"):
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
     cur.execute(
-        "INSERT INTO quiz_results (quiz_id, score, total, taken_at) VALUES (?, ?, ?, ?)",
-        (quiz_id, score, total, datetime.now().isoformat())
+        "INSERT INTO quiz_results (quiz_id, score, total, quiz_type, difficulty, taken_at) VALUES (?, ?, ?, ?, ?, ?)",
+        (quiz_id, score, total, quiz_type, difficulty, datetime.now().isoformat())
     )
+    conn.commit()
+    conn.close()
+    xp = score * 10
+    add_study_xp(xp)
+
+def save_flashcard_confidence(card_front: str, confidence: str):
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+    cur.execute(
+        "INSERT INTO flashcard_progress (card_front, confidence, reviewed_at) VALUES (?, ?, ?)",
+        (card_front, confidence, datetime.now().isoformat())
+    )
+    conn.commit()
+    conn.close()
+    xp_map = {"Know it": 15, "Almost": 8, "No idea": 3}
+    add_study_xp(xp_map.get(confidence, 5))
+
+def add_study_xp(xp: int):
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+    today = datetime.now().strftime("%Y-%m-%d")
+    cur.execute("SELECT id FROM study_streak WHERE study_date = ?", (today,))
+    row = cur.fetchone()
+    if row:
+        cur.execute("UPDATE study_streak SET xp_earned = xp_earned + ? WHERE study_date = ?",
+                   (xp, today))
+    else:
+        cur.execute("INSERT INTO study_streak (study_date, xp_earned) VALUES (?, ?)",
+                   (today, xp))
     conn.commit()
     conn.close()
 
@@ -100,14 +145,70 @@ def get_all_documents():
 def get_quiz_results():
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
-    cur.execute("""
-        SELECT qr.taken_at, qr.score, qr.total, d.name
-        FROM quiz_results qr
-        JOIN quizzes q ON qr.quiz_id = q.id
-        JOIN documents d ON q.document_id = d.id
-        ORDER BY qr.taken_at DESC
-        LIMIT 10
-    """)
+    try:
+        cur.execute("""
+            SELECT qr.taken_at, qr.score, qr.total, d.name, qr.quiz_type, qr.difficulty
+            FROM quiz_results qr
+            JOIN quizzes q ON qr.quiz_id = q.id
+            JOIN documents d ON q.document_id = d.id
+            ORDER BY qr.taken_at DESC
+            LIMIT 20
+        """)
+    except:
+        cur.execute("""
+            SELECT qr.taken_at, qr.score, qr.total, d.name
+            FROM quiz_results qr
+            JOIN quizzes q ON qr.quiz_id = q.id
+            JOIN documents d ON q.document_id = d.id
+            ORDER BY qr.taken_at DESC
+            LIMIT 20
+        """)
     rows = cur.fetchall()
     conn.close()
     return rows
+
+def get_study_streak():
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+    cur.execute("SELECT study_date, xp_earned FROM study_streak ORDER BY study_date DESC LIMIT 30")
+    rows = cur.fetchall()
+    conn.close()
+    return rows
+
+def get_total_xp():
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+    cur.execute("SELECT SUM(xp_earned) FROM study_streak")
+    row = cur.fetchone()
+    conn.close()
+    return row[0] or 0
+
+def get_flashcard_confidence_stats():
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT confidence, COUNT(*) as count
+        FROM flashcard_progress
+        GROUP BY confidence
+    """)
+    rows = cur.fetchall()
+    conn.close()
+    return {r[0]: r[1] for r in rows}
+
+def get_streak_count():
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+    cur.execute("SELECT study_date FROM study_streak ORDER BY study_date DESC")
+    dates = [r[0] for r in cur.fetchall()]
+    conn.close()
+    if not dates:
+        return 0
+    streak = 0
+    today = date.today()
+    for i, d in enumerate(dates):
+        study_date = date.fromisoformat(d)
+        if study_date == today - timedelta(days=i):
+            streak += 1
+        else:
+            break
+    return streak
