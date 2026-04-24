@@ -26,6 +26,16 @@ except:
     TTS_AVAILABLE = False
     LANGUAGE_CODES = {"English": "en"}
 
+try:
+    from youtube_api import (
+        search_youtube_videos, get_educational_links,
+        get_subject_category, get_performance_insights,
+        get_study_schedule
+    )
+    YOUTUBE_AVAILABLE = True
+except:
+    YOUTUBE_AVAILABLE = False
+
 init_db()
 
 st.set_page_config(
@@ -381,7 +391,8 @@ with st.sidebar:
     pages = [
         "🏠 Home", "📤 Upload Document",
         "📝 Generate Quiz", "🃏 Flashcards",
-        "📚 Study Content", "💬 Chat with Doc", "📊 Progress"
+        "📚 Study Content", "🎥 Resources",
+        "💬 Chat with Doc", "📊 Progress"
     ]
     default_page = st.query_params.get("page", "🏠 Home")
     default_idx = pages.index(default_page) if default_page in pages else 0
@@ -411,7 +422,6 @@ with st.sidebar:
     if st.button("🏠 Go to Home", use_container_width=True, type="primary"):
         st.query_params["page"] = "🏠 Home"
         st.rerun()
-
     if st.button("🗑️ Clear Everything", use_container_width=True):
         for k, v in defaults.items():
             st.session_state[k] = v
@@ -427,16 +437,17 @@ if page == "🏠 Home":
     st.markdown('<div class="hero-sub">Upload any document → AI generates quizzes, flashcards, study notes & more ✨</div>',
                 unsafe_allow_html=True)
 
-    col1, col2, col3, col4, col5 = st.columns(5)
+    col1, col2, col3, col4, col5, col6 = st.columns(6)
     cards_data = [
         ("📤", "Upload", "PDF, TXT, DOCX", "linear-gradient(90deg,#667eea,#764ba2)", "📤 Upload Document"),
         ("📝", "Quiz", "MCQ, T/F, Fill Blanks", "linear-gradient(90deg,#f093fb,#f5576c)", "📝 Generate Quiz"),
-        ("🃏", "Flashcards", "Smart confidence rating", "linear-gradient(90deg,#4facfe,#00f2fe)", "🃏 Flashcards"),
-        ("📚", "Study Notes", "AI summary + mind map", "linear-gradient(90deg,#43e97b,#38f9d7)", "📚 Study Content"),
-        ("📊", "Progress", "XP + streaks + stats", "linear-gradient(90deg,#fa709a,#fee140)", "📊 Progress"),
+        ("🃏", "Flashcards", "Smart confidence", "linear-gradient(90deg,#4facfe,#00f2fe)", "🃏 Flashcards"),
+        ("📚", "Study Notes", "AI summary+mind map", "linear-gradient(90deg,#43e97b,#38f9d7)", "📚 Study Content"),
+        ("🎥", "Resources", "YouTube+Study sites", "linear-gradient(90deg,#ff512f,#dd2476)", "🎥 Resources"),
+        ("📊", "Progress", "XP+streaks+stats", "linear-gradient(90deg,#fa709a,#fee140)", "📊 Progress"),
     ]
     for col, (icon, title, desc, color, target) in zip(
-        [col1, col2, col3, col4, col5], cards_data
+        [col1, col2, col3, col4, col5, col6], cards_data
     ):
         with col:
             st.markdown(f"""
@@ -446,7 +457,7 @@ if page == "🏠 Home":
                 <div class="feature-desc">{desc}</div>
             </div>
             """, unsafe_allow_html=True)
-            if st.button(f"Open", key=f"nav_{title}",
+            if st.button("Open", key=f"nav_{title}",
                         use_container_width=True, type="primary"):
                 st.query_params["page"] = target
                 st.rerun()
@@ -460,7 +471,8 @@ if page == "🏠 Home":
             ("2", "📚", "Get AI study notes instantly"),
             ("3", "📝", "Take quiz with difficulty levels"),
             ("4", "🃏", "Review flashcards with confidence"),
-            ("5", "📊", "Track XP, streaks and progress"),
+            ("5", "🎥", "Find YouTube videos and resources"),
+            ("6", "📊", "Track XP, streaks and progress"),
         ]:
             st.markdown(f"""
             <div class="step-card">
@@ -558,12 +570,16 @@ elif page == "📤 Upload Document":
                 col2.metric("💬 Words", f"{len(text.split()):,}")
                 col3.metric("🧩 Chunks", len(chunks))
 
+                if YOUTUBE_AVAILABLE:
+                    subject = get_subject_category(text)
+                    st.info(f"📂 Detected Subject: **{subject}**")
+
                 with st.expander("👀 Preview content"):
                     st.code(text[:1000], language=None)
                 st.success(f"✅ '{uploaded.name}' loaded!")
 
                 st.markdown("### What would you like to do?")
-                c1, c2, c3, c4 = st.columns(4)
+                c1, c2, c3, c4, c5 = st.columns(5)
                 with c1:
                     if st.button("📚 Study Notes", use_container_width=True, type="primary"):
                         st.query_params["page"] = "📚 Study Content"
@@ -577,6 +593,10 @@ elif page == "📤 Upload Document":
                         st.query_params["page"] = "🃏 Flashcards"
                         st.rerun()
                 with c4:
+                    if st.button("🎥 Resources", use_container_width=True, type="primary"):
+                        st.query_params["page"] = "🎥 Resources"
+                        st.rerun()
+                with c5:
                     if st.button("💬 Chat", use_container_width=True, type="primary"):
                         st.query_params["page"] = "💬 Chat with Doc"
                         st.rerun()
@@ -685,7 +705,7 @@ elif page == "📚 Study Content":
 
         st.divider()
         st.markdown("### What's next?")
-        c1, c2, c3 = st.columns(3)
+        c1, c2, c3, c4 = st.columns(4)
         with c1:
             if st.button("📝 Take Quiz", use_container_width=True, type="primary"):
                 st.query_params["page"] = "📝 Generate Quiz"
@@ -695,7 +715,11 @@ elif page == "📚 Study Content":
                 st.query_params["page"] = "🃏 Flashcards"
                 st.rerun()
         with c3:
-            if st.button("💬 Chat with Doc", use_container_width=True, type="primary"):
+            if st.button("🎥 Resources", use_container_width=True, type="primary"):
+                st.query_params["page"] = "🎥 Resources"
+                st.rerun()
+        with c4:
+            if st.button("💬 Chat", use_container_width=True, type="primary"):
                 st.query_params["page"] = "💬 Chat with Doc"
                 st.rerun()
 
@@ -852,12 +876,13 @@ elif page == "📝 Generate Quiz":
         st.write("")
         c1, c2 = st.columns(2)
         with c1:
-            if st.button("🏠 Back to Home", use_container_width=True, type="primary",
-                        key="score_home"):
+            if st.button("🏠 Back to Home", use_container_width=True,
+                        type="primary", key="score_home"):
                 st.query_params["page"] = "🏠 Home"
                 st.rerun()
         with c2:
-            if st.button("📊 View Progress", use_container_width=True, key="score_progress"):
+            if st.button("📊 View Progress", use_container_width=True,
+                        key="score_progress"):
                 st.query_params["page"] = "📊 Progress"
                 st.rerun()
 
@@ -1131,6 +1156,107 @@ elif page == "🃏 Flashcards":
                 st.markdown(f'<div class="conf-noidea">😅 No idea<br><b style="font-size:1.5em">{stats.get("No idea",0)}</b></div>', unsafe_allow_html=True)
 
 # ═══════════════════════════════════════════════════════════════════════════
+# RESOURCES — YouTube + Educational Links
+# ═══════════════════════════════════════════════════════════════════════════
+elif page == "🎥 Resources":
+    home_button()
+    st.markdown('<div class="hero-title">🎥 Learning Resources</div>', unsafe_allow_html=True)
+    st.markdown('<div class="hero-sub">YouTube videos + free educational websites for your topic</div>',
+                unsafe_allow_html=True)
+    st.divider()
+
+    if st.session_state["doc_text"] and YOUTUBE_AVAILABLE:
+        subject = get_subject_category(st.session_state["doc_text"])
+        st.markdown(f"""
+        <div style="background:linear-gradient(135deg,#667eea,#764ba2);
+                    border-radius:14px;padding:14px 20px;color:white;
+                    font-weight:700;font-size:1.1em;margin-bottom:16px">
+            📂 Detected Subject: {subject}
+        </div>
+        """, unsafe_allow_html=True)
+        default_topic = st.session_state["doc_name"].replace(".pdf","").replace(".txt","").replace(".docx","")
+    else:
+        default_topic = ""
+
+    topic = st.text_input(
+        "🔍 Search topic",
+        value=default_topic,
+        placeholder="e.g. Machine Learning, Photosynthesis, World War 2...",
+        label_visibility="collapsed"
+    )
+
+    col1, col2 = st.columns(2)
+    with col1:
+        search_videos = st.button("🎥 Find YouTube Videos", type="primary", use_container_width=True)
+    with col2:
+        search_links = st.button("🌐 Find Study Websites", use_container_width=True)
+
+    st.divider()
+
+    if search_videos and topic:
+        with st.spinner("🔍 Searching YouTube..."):
+            videos = search_youtube_videos(f"{topic} education tutorial", max_results=6)
+
+        if videos:
+            st.markdown("### 🎥 YouTube Videos")
+            col1, col2 = st.columns(2)
+            for i, video in enumerate(videos):
+                with col1 if i % 2 == 0 else col2:
+                    st.markdown(f"""
+                    <div style="background:white;border-radius:16px;padding:16px;
+                                margin:8px 0;box-shadow:0 3px 15px rgba(102,126,234,0.1);
+                                border-left:5px solid #ff0000">
+                        <div style="font-weight:800;color:#1a1a2e;font-size:0.95em;
+                                    margin-bottom:6px">{video['title']}</div>
+                        <div style="color:#6b7280;font-size:0.82em;margin-bottom:8px">
+                            📺 {video['channel']} · ⏱️ {video['duration']} · 👁️ {video['views']}
+                        </div>
+                        <a href="{video['url']}" target="_blank"
+                           style="background:linear-gradient(135deg,#ff0000,#cc0000);
+                                  color:white;padding:6px 14px;border-radius:8px;
+                                  text-decoration:none;font-weight:700;font-size:0.85em">
+                            ▶️ Watch on YouTube
+                        </a>
+                    </div>
+                    """, unsafe_allow_html=True)
+        else:
+            st.warning("No videos found. Try a different search term!")
+
+    if search_links and topic:
+        st.markdown("### 🌐 Free Educational Websites")
+        links = get_educational_links(topic)
+        col1, col2, col3 = st.columns(3)
+        for i, link in enumerate(links):
+            with [col1, col2, col3][i % 3]:
+                st.markdown(f"""
+                <div style="background:white;border-radius:16px;padding:20px;
+                            margin:8px 0;box-shadow:0 3px 15px rgba(102,126,234,0.1);
+                            border-top:5px solid {link['color']};text-align:center">
+                    <div style="font-weight:800;color:#1a1a2e;font-size:1em;
+                                margin-bottom:6px">{link['name']}</div>
+                    <div style="color:#6b7280;font-size:0.82em;margin-bottom:12px">
+                        {link['desc']}
+                    </div>
+                    <a href="{link['url']}" target="_blank"
+                       style="background:{link['color']};
+                              color:white;padding:8px 16px;border-radius:8px;
+                              text-decoration:none;font-weight:700;font-size:0.85em">
+                        🔗 Visit Now
+                    </a>
+                </div>
+                """, unsafe_allow_html=True)
+
+    if not topic:
+        st.markdown("""
+        <div style="background:white;border-radius:16px;padding:30px;
+                    text-align:center;box-shadow:0 3px 15px rgba(102,126,234,0.1)">
+            <div style="font-size:3em">🎥</div>
+            <div style="font-weight:800;font-size:1.2em;margin:10px 0">Search any topic!</div>
+            <div style="color:#6b7280">Find free YouTube videos and educational websites instantly</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+# ═══════════════════════════════════════════════════════════════════════════
 # CHAT
 # ═══════════════════════════════════════════════════════════════════════════
 elif page == "💬 Chat with Doc":
@@ -1206,6 +1332,48 @@ elif page == "📊 Progress":
     st.markdown(f"### ⚡ Level {level} Progress")
     st.progress((total_xp % 100) / 100)
     st.caption(f"{total_xp % 100}/100 XP to reach Level {level+1}")
+
+    # Performance Insights
+    if results and YOUTUBE_AVAILABLE:
+        insights = get_performance_insights(results)
+        if insights:
+            st.divider()
+            st.markdown("### 💡 Performance Insights")
+            c1, c2, c3 = st.columns(3)
+            with c1:
+                st.markdown(f"""
+                <div style="background:white;border-radius:14px;padding:16px;
+                            text-align:center;box-shadow:0 3px 15px rgba(102,126,234,0.1)">
+                    <div style="font-size:0.85em;color:#6b7280">📈 Trend</div>
+                    <div style="font-weight:800;font-size:1.1em">{insights.get("trend","")}</div>
+                </div>
+                """, unsafe_allow_html=True)
+            with c2:
+                st.markdown(f"""
+                <div style="background:white;border-radius:14px;padding:16px;
+                            text-align:center;box-shadow:0 3px 15px rgba(102,126,234,0.1)">
+                    <div style="font-size:0.85em;color:#6b7280">🏆 Best Score</div>
+                    <div style="font-weight:800;font-size:1.1em;color:#28a745">{insights.get("best_score",0):.0f}%</div>
+                </div>
+                """, unsafe_allow_html=True)
+            with c3:
+                st.markdown(f"""
+                <div style="background:white;border-radius:14px;padding:16px;
+                            text-align:center;box-shadow:0 3px 15px rgba(102,126,234,0.1)">
+                    <div style="font-size:0.85em;color:#6b7280">📊 Average</div>
+                    <div style="font-weight:800;font-size:1.1em;color:#667eea">{insights.get("avg_score",0):.0f}%</div>
+                </div>
+                """, unsafe_allow_html=True)
+
+            st.markdown("### 📋 Recommendations")
+            for rec in insights.get("recommendations", []):
+                st.markdown(f"""
+                <div style="background:white;border-radius:12px;padding:12px 16px;
+                            margin:6px 0;box-shadow:0 2px 10px rgba(102,126,234,0.1);
+                            border-left:4px solid #667eea">
+                    {rec}
+                </div>
+                """, unsafe_allow_html=True)
 
     col1, col2 = st.columns(2)
     with col1:
