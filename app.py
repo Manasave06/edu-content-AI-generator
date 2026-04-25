@@ -26,6 +26,7 @@ except:
     TTS_AVAILABLE = False
     LANGUAGE_CODES = {"English": "en"}
 
+# ── YouTube API Import with fallback ──────────────────────────────────────
 try:
     from youtube_api import (
         search_youtube_videos, get_educational_links,
@@ -33,8 +34,13 @@ try:
         get_study_schedule
     )
     YOUTUBE_AVAILABLE = True
-except:
+except Exception as e:
     YOUTUBE_AVAILABLE = False
+    def search_youtube_videos(query, max_results=6): return []
+    def get_educational_links(topic): return []
+    def get_subject_category(text): return "📚 General Studies"
+    def get_performance_insights(results): return {}
+    def get_study_schedule(topics, hours=2): return []
 
 init_db()
 
@@ -472,7 +478,7 @@ if page == "🏠 Home":
             ("3", "📝", "Take quiz with difficulty levels"),
             ("4", "🃏", "Review flashcards with confidence"),
             ("5", "🎥", "Find YouTube videos and resources"),
-            ("6", "📊", "Track XP, streaks and progress"),
+            ("6", "📊", "Track XP streaks and progress"),
         ]:
             st.markdown(f"""
             <div class="step-card">
@@ -570,9 +576,11 @@ elif page == "📤 Upload Document":
                 col2.metric("💬 Words", f"{len(text.split()):,}")
                 col3.metric("🧩 Chunks", len(chunks))
 
-                if YOUTUBE_AVAILABLE:
+                try:
                     subject = get_subject_category(text)
                     st.info(f"📂 Detected Subject: **{subject}**")
+                except:
+                    pass
 
                 with st.expander("👀 Preview content"):
                     st.code(text[:1000], language=None)
@@ -704,7 +712,6 @@ elif page == "📚 Study Content":
                     """, unsafe_allow_html=True)
 
         st.divider()
-        st.markdown("### What's next?")
         c1, c2, c3, c4 = st.columns(4)
         with c1:
             if st.button("📝 Take Quiz", use_container_width=True, type="primary"):
@@ -830,7 +837,6 @@ elif page == "📝 Generate Quiz":
             except Exception as e:
                 st.error(f"❌ {e}")
 
-    # Timer
     timer_ph = st.empty()
     if st.session_state["timer_active"] and not (
         st.session_state.get("quiz_submitted") or
@@ -863,7 +869,10 @@ elif page == "📝 Generate Quiz":
 
     def show_score(score, total, qtype, diff):
         pct = score/total*100
-        save_quiz_result(st.session_state["quiz_id"] or 1, score, total, qtype, diff)
+        try:
+            save_quiz_result(st.session_state["quiz_id"] or 1, score, total, qtype, diff)
+        except:
+            pass
         xp_earned = score * 10
         st.markdown(f"""
         <div class="score-display">
@@ -1081,16 +1090,22 @@ elif page == "🃏 Flashcards":
 
             if TTS_AVAILABLE:
                 lang_code = LANGUAGE_CODES[st.session_state["selected_lang"]]
-                af = text_to_speech(card["front"], lang_code)
-                if af:
-                    st.markdown(get_audio_html(af), unsafe_allow_html=True)
+                try:
+                    af = text_to_speech(card["front"], lang_code)
+                    if af:
+                        st.markdown(get_audio_html(af), unsafe_allow_html=True)
+                except:
+                    pass
 
             if st.session_state["fc_flipped"]:
                 st.markdown(f'<div class="fc-back">✅ {card["back"]}</div>', unsafe_allow_html=True)
                 if TTS_AVAILABLE:
-                    ab = text_to_speech(card["back"], lang_code)
-                    if ab:
-                        st.markdown(get_audio_html(ab), unsafe_allow_html=True)
+                    try:
+                        ab = text_to_speech(card["back"], lang_code)
+                        if ab:
+                            st.markdown(get_audio_html(ab), unsafe_allow_html=True)
+                    except:
+                        pass
 
                 st.divider()
                 st.markdown("**How well did you know this?**")
@@ -1156,7 +1171,7 @@ elif page == "🃏 Flashcards":
                 st.markdown(f'<div class="conf-noidea">😅 No idea<br><b style="font-size:1.5em">{stats.get("No idea",0)}</b></div>', unsafe_allow_html=True)
 
 # ═══════════════════════════════════════════════════════════════════════════
-# RESOURCES — YouTube + Educational Links
+# RESOURCES
 # ═══════════════════════════════════════════════════════════════════════════
 elif page == "🎥 Resources":
     home_button()
@@ -1165,17 +1180,20 @@ elif page == "🎥 Resources":
                 unsafe_allow_html=True)
     st.divider()
 
-    if st.session_state["doc_text"] and YOUTUBE_AVAILABLE:
-        subject = get_subject_category(st.session_state["doc_text"])
-        st.markdown(f"""
-        <div style="background:linear-gradient(135deg,#667eea,#764ba2);
-                    border-radius:14px;padding:14px 20px;color:white;
-                    font-weight:700;font-size:1.1em;margin-bottom:16px">
-            📂 Detected Subject: {subject}
-        </div>
-        """, unsafe_allow_html=True)
-        default_topic = st.session_state["doc_name"].replace(".pdf","").replace(".txt","").replace(".docx","")
-    else:
+    try:
+        if st.session_state["doc_text"]:
+            subject = get_subject_category(st.session_state["doc_text"])
+            st.markdown(f"""
+            <div style="background:linear-gradient(135deg,#667eea,#764ba2);
+                        border-radius:14px;padding:14px 20px;color:white;
+                        font-weight:700;font-size:1.1em;margin-bottom:16px">
+                📂 Detected Subject: {subject}
+            </div>
+            """, unsafe_allow_html=True)
+            default_topic = st.session_state["doc_name"].replace(".pdf","").replace(".txt","").replace(".docx","")
+        else:
+            default_topic = ""
+    except:
         default_topic = ""
 
     topic = st.text_input(
@@ -1195,7 +1213,11 @@ elif page == "🎥 Resources":
 
     if search_videos and topic:
         with st.spinner("🔍 Searching YouTube..."):
-            videos = search_youtube_videos(f"{topic} education tutorial", max_results=6)
+            try:
+                videos = search_youtube_videos(f"{topic} education tutorial", max_results=6)
+            except Exception as e:
+                st.error(f"Search error: {e}")
+                videos = []
 
         if videos:
             st.markdown("### 🎥 YouTube Videos")
@@ -1224,27 +1246,33 @@ elif page == "🎥 Resources":
 
     if search_links and topic:
         st.markdown("### 🌐 Free Educational Websites")
-        links = get_educational_links(topic)
-        col1, col2, col3 = st.columns(3)
-        for i, link in enumerate(links):
-            with [col1, col2, col3][i % 3]:
-                st.markdown(f"""
-                <div style="background:white;border-radius:16px;padding:20px;
-                            margin:8px 0;box-shadow:0 3px 15px rgba(102,126,234,0.1);
-                            border-top:5px solid {link['color']};text-align:center">
-                    <div style="font-weight:800;color:#1a1a2e;font-size:1em;
-                                margin-bottom:6px">{link['name']}</div>
-                    <div style="color:#6b7280;font-size:0.82em;margin-bottom:12px">
-                        {link['desc']}
+        try:
+            links = get_educational_links(topic)
+        except Exception as e:
+            st.error(f"Links error: {e}")
+            links = []
+
+        if links:
+            col1, col2, col3 = st.columns(3)
+            for i, link in enumerate(links):
+                with [col1, col2, col3][i % 3]:
+                    st.markdown(f"""
+                    <div style="background:white;border-radius:16px;padding:20px;
+                                margin:8px 0;box-shadow:0 3px 15px rgba(102,126,234,0.1);
+                                border-top:5px solid {link['color']};text-align:center">
+                        <div style="font-weight:800;color:#1a1a2e;font-size:1em;
+                                    margin-bottom:6px">{link['name']}</div>
+                        <div style="color:#6b7280;font-size:0.82em;margin-bottom:12px">
+                            {link['desc']}
+                        </div>
+                        <a href="{link['url']}" target="_blank"
+                           style="background:{link['color']};
+                                  color:white;padding:8px 16px;border-radius:8px;
+                                  text-decoration:none;font-weight:700;font-size:0.85em">
+                            🔗 Visit Now
+                        </a>
                     </div>
-                    <a href="{link['url']}" target="_blank"
-                       style="background:{link['color']};
-                              color:white;padding:8px 16px;border-radius:8px;
-                              text-decoration:none;font-weight:700;font-size:0.85em">
-                        🔗 Visit Now
-                    </a>
-                </div>
-                """, unsafe_allow_html=True)
+                    """, unsafe_allow_html=True)
 
     if not topic:
         st.markdown("""
@@ -1277,10 +1305,13 @@ elif page == "💬 Chat with Doc":
         st.markdown(f'<div class="chat-user"><div class="chat-label">🧑 You</div>{h["user"]}</div>', unsafe_allow_html=True)
         st.markdown(f'<div class="chat-ai"><div class="chat-label">🤖 AI</div>{h["assistant"]}</div>', unsafe_allow_html=True)
         if TTS_AVAILABLE:
-            lang_code = LANGUAGE_CODES[st.session_state["selected_lang"]]
-            audio = text_to_speech(h["assistant"], lang_code)
-            if audio:
-                st.markdown(get_audio_html(audio), unsafe_allow_html=True)
+            try:
+                lang_code = LANGUAGE_CODES[st.session_state["selected_lang"]]
+                audio = text_to_speech(h["assistant"], lang_code)
+                if audio:
+                    st.markdown(get_audio_html(audio), unsafe_allow_html=True)
+            except:
+                pass
 
     question = st.chat_input("Ask anything about your document...")
     if question:
@@ -1289,8 +1320,11 @@ elif page == "💬 Chat with Doc":
                 answer = chat_with_doc(st.session_state["doc_text"], question,
                                       st.session_state["chat_history"])
                 if TTS_AVAILABLE and st.session_state["selected_lang"] != "English":
-                    lang_code = LANGUAGE_CODES[st.session_state["selected_lang"]]
-                    answer = translate_text(answer, lang_code)
+                    try:
+                        lang_code = LANGUAGE_CODES[st.session_state["selected_lang"]]
+                        answer = translate_text(answer, lang_code)
+                    except:
+                        pass
                 st.session_state["chat_history"].append({"user": question, "assistant": answer})
                 st.rerun()
             except Exception as e:
@@ -1333,47 +1367,49 @@ elif page == "📊 Progress":
     st.progress((total_xp % 100) / 100)
     st.caption(f"{total_xp % 100}/100 XP to reach Level {level+1}")
 
-    # Performance Insights
-    if results and YOUTUBE_AVAILABLE:
-        insights = get_performance_insights(results)
-        if insights:
-            st.divider()
-            st.markdown("### 💡 Performance Insights")
-            c1, c2, c3 = st.columns(3)
-            with c1:
-                st.markdown(f"""
-                <div style="background:white;border-radius:14px;padding:16px;
-                            text-align:center;box-shadow:0 3px 15px rgba(102,126,234,0.1)">
-                    <div style="font-size:0.85em;color:#6b7280">📈 Trend</div>
-                    <div style="font-weight:800;font-size:1.1em">{insights.get("trend","")}</div>
-                </div>
-                """, unsafe_allow_html=True)
-            with c2:
-                st.markdown(f"""
-                <div style="background:white;border-radius:14px;padding:16px;
-                            text-align:center;box-shadow:0 3px 15px rgba(102,126,234,0.1)">
-                    <div style="font-size:0.85em;color:#6b7280">🏆 Best Score</div>
-                    <div style="font-weight:800;font-size:1.1em;color:#28a745">{insights.get("best_score",0):.0f}%</div>
-                </div>
-                """, unsafe_allow_html=True)
-            with c3:
-                st.markdown(f"""
-                <div style="background:white;border-radius:14px;padding:16px;
-                            text-align:center;box-shadow:0 3px 15px rgba(102,126,234,0.1)">
-                    <div style="font-size:0.85em;color:#6b7280">📊 Average</div>
-                    <div style="font-weight:800;font-size:1.1em;color:#667eea">{insights.get("avg_score",0):.0f}%</div>
-                </div>
-                """, unsafe_allow_html=True)
+    try:
+        if results:
+            insights = get_performance_insights(results)
+            if insights:
+                st.divider()
+                st.markdown("### 💡 Performance Insights")
+                c1, c2, c3 = st.columns(3)
+                with c1:
+                    st.markdown(f"""
+                    <div style="background:white;border-radius:14px;padding:16px;
+                                text-align:center;box-shadow:0 3px 15px rgba(102,126,234,0.1)">
+                        <div style="font-size:0.85em;color:#6b7280">📈 Trend</div>
+                        <div style="font-weight:800;font-size:1.1em">{insights.get("trend","")}</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                with c2:
+                    st.markdown(f"""
+                    <div style="background:white;border-radius:14px;padding:16px;
+                                text-align:center;box-shadow:0 3px 15px rgba(102,126,234,0.1)">
+                        <div style="font-size:0.85em;color:#6b7280">🏆 Best Score</div>
+                        <div style="font-weight:800;font-size:1.1em;color:#28a745">{insights.get("best_score",0):.0f}%</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                with c3:
+                    st.markdown(f"""
+                    <div style="background:white;border-radius:14px;padding:16px;
+                                text-align:center;box-shadow:0 3px 15px rgba(102,126,234,0.1)">
+                        <div style="font-size:0.85em;color:#6b7280">📊 Average</div>
+                        <div style="font-weight:800;font-size:1.1em;color:#667eea">{insights.get("avg_score",0):.0f}%</div>
+                    </div>
+                    """, unsafe_allow_html=True)
 
-            st.markdown("### 📋 Recommendations")
-            for rec in insights.get("recommendations", []):
-                st.markdown(f"""
-                <div style="background:white;border-radius:12px;padding:12px 16px;
-                            margin:6px 0;box-shadow:0 2px 10px rgba(102,126,234,0.1);
-                            border-left:4px solid #667eea">
-                    {rec}
-                </div>
-                """, unsafe_allow_html=True)
+                st.markdown("### 📋 Recommendations")
+                for rec in insights.get("recommendations", []):
+                    st.markdown(f"""
+                    <div style="background:white;border-radius:12px;padding:12px 16px;
+                                margin:6px 0;box-shadow:0 2px 10px rgba(102,126,234,0.1);
+                                border-left:4px solid #667eea">
+                        {rec}
+                    </div>
+                    """, unsafe_allow_html=True)
+    except:
+        pass
 
     col1, col2 = st.columns(2)
     with col1:
