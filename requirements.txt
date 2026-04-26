@@ -6,5 +6,4 @@ PyPDF2
 python-dotenv
 gTTS
 python-docx
-requests
-plotly
+youtube-search-python
