@@ -1,10 +1,10 @@
-from youtubesearchpython import VideosSearch
 import urllib.parse
 
 
 def search_youtube_videos(query: str, max_results: int = 6) -> list:
-    """Search YouTube videos - returns direct search links if API fails."""
+    """Search YouTube videos - returns direct search links."""
     try:
+        from youtubesearchpython import VideosSearch
         search = VideosSearch(query, limit=max_results)
         results = search.result()
         videos = []
@@ -21,22 +21,24 @@ def search_youtube_videos(query: str, max_results: int = 6) -> list:
             return videos
         raise Exception("No results")
     except:
+        # Fallback with correct query
+        base = query.strip()
         topics = [
-            f"{query} introduction",
-            f"{query} tutorial for beginners",
-            f"{query} explained",
-            f"{query} lecture",
-            f"{query} full course",
-            f"{query} study guide"
+            f"{base} introduction",
+            f"{base} tutorial for beginners",
+            f"{base} explained simply",
+            f"{base} full lecture",
+            f"{base} full course free",
+            f"{base} study guide"
         ]
         return [
             {
                 "title": f"🔍 {t}",
                 "url": f"https://www.youtube.com/results?search_query={urllib.parse.quote(t)}",
                 "thumbnail": "",
-                "duration": "Click to search",
+                "duration": "Click to open YouTube",
                 "channel": "YouTube Search",
-                "views": ""
+                "views": "Free"
             }
             for t in topics[:max_results]
         ]
@@ -103,7 +105,6 @@ def get_educational_links(topic: str) -> list:
             }
         ]
     except Exception as e:
-        print(f"Educational links error: {e}")
         return []
 
 
@@ -195,7 +196,6 @@ def get_subject_category(text: str) -> str:
         return "📚 General Studies"
 
     except Exception as e:
-        print(f"Subject category error: {e}")
         return "📚 General Studies"
 
 
@@ -225,7 +225,6 @@ def get_study_schedule(weak_topics: list, available_hours: int = 2) -> list:
         return schedule
 
     except Exception as e:
-        print(f"Study schedule error: {e}")
         return []
 
 
@@ -286,5 +285,4 @@ def get_performance_insights(quiz_results: list) -> dict:
         }
 
     except Exception as e:
-        print(f"Performance insights error: {e}")
         return {}

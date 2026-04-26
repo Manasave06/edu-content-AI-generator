@@ -1214,7 +1214,7 @@ elif page == "🎥 Resources":
     if search_videos and topic:
         with st.spinner("🔍 Searching YouTube..."):
             try:
-                videos = search_youtube_videos(f"{topic} education tutorial", max_results=6)
+                videos = search_youtube_videos(topic, max_results=6)
             except Exception as e:
                 st.error(f"Search error: {e}")
                 videos = []
