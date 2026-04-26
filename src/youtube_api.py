@@ -3,7 +3,7 @@ import urllib.parse
 
 
 def search_youtube_videos(query: str, max_results: int = 6) -> list:
-    """Search YouTube videos without API key."""
+    """Search YouTube videos - returns direct search links if API fails."""
     try:
         search = VideosSearch(query, limit=max_results)
         results = search.result()
@@ -17,10 +17,29 @@ def search_youtube_videos(query: str, max_results: int = 6) -> list:
                 "channel": video.get("channel", {}).get("name", ""),
                 "views": video.get("viewCount", {}).get("short", "")
             })
-        return videos
-    except Exception as e:
-        print(f"YouTube search error: {e}")
-        return []
+        if videos:
+            return videos
+        raise Exception("No results")
+    except:
+        topics = [
+            f"{query} introduction",
+            f"{query} tutorial for beginners",
+            f"{query} explained",
+            f"{query} lecture",
+            f"{query} full course",
+            f"{query} study guide"
+        ]
+        return [
+            {
+                "title": f"🔍 {t}",
+                "url": f"https://www.youtube.com/results?search_query={urllib.parse.quote(t)}",
+                "thumbnail": "",
+                "duration": "Click to search",
+                "channel": "YouTube Search",
+                "views": ""
+            }
+            for t in topics[:max_results]
+        ]
 
 
 def get_educational_links(topic: str) -> list:
