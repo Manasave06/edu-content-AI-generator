@@ -420,7 +420,7 @@ with st.sidebar:
         st.rerun()
 
 # ═══════════════════════════════════════════════════════════════════════════
-# HOME — Redesigned without "How it works"
+# HOME — Feature Cards FIRST, Stats SECOND
 # ═══════════════════════════════════════════════════════════════════════════
 if page == "🏠 Home":
     st.markdown('<div class="hero-title">Learn Smarter,<br>Not Harder! 🚀</div>',
@@ -428,7 +428,45 @@ if page == "🏠 Home":
     st.markdown('<div class="hero-sub">Upload any document → AI generates quizzes, flashcards, study notes & more ✨</div>',
                 unsafe_allow_html=True)
 
-    # ── Stats Row ─────────────────────────────────────────────────────────
+    # ── Feature Cards FIRST ───────────────────────────────────────────────
+    st.markdown("### 🎯 What would you like to do?")
+    col1, col2, col3 = st.columns(3)
+    col4, col5, col6 = st.columns(3)
+
+    cards_data = [
+        ("📤", "Upload Document", "Upload PDF, TXT or DOCX file and let AI read it",
+         "linear-gradient(90deg,#667eea,#764ba2)", "📤 Upload Document"),
+        ("📝", "Generate Quiz", "MCQ, True/False or Fill Blanks with Easy/Medium/Hard levels",
+         "linear-gradient(90deg,#f093fb,#f5576c)", "📝 Generate Quiz"),
+        ("🃏", "Flashcards", "Smart flip cards with confidence rating and XP rewards",
+         "linear-gradient(90deg,#4facfe,#00f2fe)", "🃏 Flashcards"),
+        ("📚", "Study Content", "AI summary, key points, mind map and exam tips",
+         "linear-gradient(90deg,#43e97b,#38f9d7)", "📚 Study Content"),
+        ("🎥", "Resources", "Find YouTube videos and free educational websites",
+         "linear-gradient(90deg,#ff512f,#dd2476)", "🎥 Resources"),
+        ("💬", "Chat with Doc", "Ask any question and AI answers from your document",
+         "linear-gradient(90deg,#fa709a,#fee140)", "💬 Chat with Doc"),
+    ]
+
+    for col, (icon, title, desc, color, target) in zip(
+        [col1, col2, col3, col4, col5, col6], cards_data
+    ):
+        with col:
+            st.markdown(f"""
+            <div class="feature-card" style="--card-color:{color}">
+                <div class="feature-icon">{icon}</div>
+                <div class="feature-title">{title}</div>
+                <div class="feature-desc">{desc}</div>
+            </div>
+            """, unsafe_allow_html=True)
+            if st.button(f"Open {icon}", key=f"nav_{title}",
+                        use_container_width=True, type="primary"):
+                st.query_params["page"] = target
+                st.rerun()
+
+    st.divider()
+
+    # ── Stats Row SECOND ──────────────────────────────────────────────────
     total_xp = get_total_xp()
     streak = get_streak_count()
     results = get_quiz_results()
@@ -471,44 +509,6 @@ if page == "🏠 Home":
     st.write("")
     st.progress((total_xp % 100) / 100)
     st.caption(f"⚡ {total_xp % 100}/100 XP to Level {level+1}")
-
-    st.divider()
-
-    # ── Feature Cards ─────────────────────────────────────────────────────
-    st.markdown("### 🎯 What would you like to do?")
-    col1, col2, col3 = st.columns(3)
-    col4, col5, col6 = st.columns(3)
-
-    cards_data = [
-        ("📤", "Upload Document", "Upload PDF, TXT or DOCX file and let AI read it",
-         "linear-gradient(90deg,#667eea,#764ba2)", "📤 Upload Document"),
-        ("📝", "Generate Quiz", "MCQ, True/False or Fill Blanks with Easy/Medium/Hard levels",
-         "linear-gradient(90deg,#f093fb,#f5576c)", "📝 Generate Quiz"),
-        ("🃏", "Flashcards", "Smart flip cards with confidence rating and XP rewards",
-         "linear-gradient(90deg,#4facfe,#00f2fe)", "🃏 Flashcards"),
-        ("📚", "Study Content", "AI summary, key points, mind map and exam tips",
-         "linear-gradient(90deg,#43e97b,#38f9d7)", "📚 Study Content"),
-        ("🎥", "Resources", "Find YouTube videos and free educational websites",
-         "linear-gradient(90deg,#ff512f,#dd2476)", "🎥 Resources"),
-        ("💬", "Chat with Doc", "Ask any question and AI answers from your document",
-         "linear-gradient(90deg,#fa709a,#fee140)", "💬 Chat with Doc"),
-    ]
-
-    for col, (icon, title, desc, color, target) in zip(
-        [col1, col2, col3, col4, col5, col6], cards_data
-    ):
-        with col:
-            st.markdown(f"""
-            <div class="feature-card" style="--card-color:{color}">
-                <div class="feature-icon">{icon}</div>
-                <div class="feature-title">{title}</div>
-                <div class="feature-desc">{desc}</div>
-            </div>
-            """, unsafe_allow_html=True)
-            if st.button(f"Open {icon}", key=f"nav_{title}",
-                        use_container_width=True, type="primary"):
-                st.query_params["page"] = target
-                st.rerun()
 
     st.divider()
 
