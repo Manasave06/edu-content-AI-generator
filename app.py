@@ -30,7 +30,8 @@ try:
     from youtube_api import (
         search_youtube_videos, get_educational_links,
         get_subject_category, get_performance_insights,
-        get_study_schedule
+        get_study_schedule, search_wikipedia,
+        search_books, get_adaptive_difficulty
     )
     YOUTUBE_AVAILABLE = True
 except Exception as e:
@@ -40,6 +41,9 @@ except Exception as e:
     def get_subject_category(text): return "📚 General Studies"
     def get_performance_insights(results): return {}
     def get_study_schedule(topics, hours=2): return []
+    def search_wikipedia(topic): return {}
+    def search_books(topic, max_results=4): return []
+    def get_adaptive_difficulty(results): return "Medium"
 
 init_db()
 
@@ -53,16 +57,12 @@ st.set_page_config(
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fira+Code:wght@500&display=swap');
-
 html, body, [class*="css"] { font-family: 'Nunito', sans-serif; }
-
 .stApp {
     background: linear-gradient(160deg, #f0f4ff 0%, #fdf0ff 50%, #fff0f7 100%);
     color: #1a1a2e;
 }
-
 #MainMenu, footer, header { visibility: hidden; }
-
 section[data-testid="stSidebar"] {
     background: linear-gradient(180deg, #667eea 0%, #764ba2 100%) !important;
     border-right: none !important;
@@ -75,258 +75,205 @@ section[data-testid="stSidebar"] .stRadio label {
     margin: 3px 0 !important;
     display: block !important;
 }
-
 .hero-title {
-    font-size: 3em;
-    font-weight: 900;
+    font-size: 3em; font-weight: 900;
     background: linear-gradient(135deg, #667eea, #f093fb, #f5576c);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    line-height: 1.2;
-    margin-bottom: 6px;
+    line-height: 1.2; margin-bottom: 6px;
 }
-
 .hero-sub { color: #6b7280; font-size: 1.1em; font-weight: 600; margin-bottom: 24px; }
-
 .feature-card {
-    background: white;
-    border-radius: 20px;
-    padding: 24px;
-    margin: 8px 0;
+    background: white; border-radius: 20px; padding: 24px; margin: 8px 0;
     box-shadow: 0 4px 20px rgba(102,126,234,0.12);
-    position: relative;
-    overflow: hidden;
-    text-align: center;
-    transition: all 0.3s ease;
+    position: relative; overflow: hidden; text-align: center; transition: all 0.3s ease;
 }
 .feature-card::after {
-    content: '';
-    position: absolute;
-    top: 0; left: 0;
-    width: 100%; height: 5px;
+    content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 5px;
     background: var(--card-color, linear-gradient(90deg,#667eea,#764ba2));
 }
 .feature-card:hover { transform: translateY(-4px); }
 .feature-icon { font-size: 2.5em; margin-bottom: 10px; }
 .feature-title { font-size: 1.1em; font-weight: 800; color: #1a1a2e; }
 .feature-desc { font-size: 0.88em; color: #6b7280; margin-top: 4px; }
-
 .xp-card {
     background: linear-gradient(135deg, #667eea, #764ba2);
-    border-radius: 20px; padding: 20px;
-    text-align: center; color: white;
+    border-radius: 20px; padding: 20px; text-align: center; color: white;
 }
 .xp-number { font-size: 2.5em; font-weight: 900; }
 .xp-label { font-size: 0.85em; opacity: 0.85; margin-top: 4px; }
-
 .streak-card {
     background: linear-gradient(135deg, #f5576c, #f093fb);
-    border-radius: 20px; padding: 20px;
-    text-align: center; color: white;
+    border-radius: 20px; padding: 20px; text-align: center; color: white;
 }
-
 .content-card {
-    background: white; border-radius: 16px;
-    padding: 20px 24px; margin: 10px 0;
+    background: white; border-radius: 16px; padding: 20px 24px; margin: 10px 0;
     box-shadow: 0 3px 15px rgba(102,126,234,0.1);
     border-left: 5px solid var(--accent, #667eea);
 }
-
 .quiz-card {
-    background: white; border-radius: 16px;
-    padding: 22px 26px; margin: 14px 0;
-    box-shadow: 0 2px 15px rgba(102,126,234,0.1);
-    border-left: 5px solid #667eea;
+    background: white; border-radius: 16px; padding: 22px 26px; margin: 14px 0;
+    box-shadow: 0 2px 15px rgba(102,126,234,0.1); border-left: 5px solid #667eea;
 }
 .quiz-number {
-    font-family: 'Fira Code', monospace;
-    font-size: 0.72em; color: #667eea;
-    font-weight: 600; letter-spacing: 2px;
-    text-transform: uppercase; margin-bottom: 8px;
+    font-family: 'Fira Code', monospace; font-size: 0.72em; color: #667eea;
+    font-weight: 600; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px;
 }
 .quiz-question { font-size: 1.1em; font-weight: 700; color: #1a1a2e; line-height: 1.5; }
-
 .badge-correct {
-    background: linear-gradient(135deg,#d4edda,#c3e6cb);
-    border: 2px solid #28a745; border-radius: 10px;
-    padding: 10px 18px; color: #155724;
+    background: linear-gradient(135deg,#d4edda,#c3e6cb); border: 2px solid #28a745;
+    border-radius: 10px; padding: 10px 18px; color: #155724;
     font-weight: 800; display: inline-block; margin: 6px 0;
 }
 .badge-wrong {
-    background: linear-gradient(135deg,#f8d7da,#f5c6cb);
-    border: 2px solid #dc3545; border-radius: 10px;
-    padding: 10px 18px; color: #721c24;
+    background: linear-gradient(135deg,#f8d7da,#f5c6cb); border: 2px solid #dc3545;
+    border-radius: 10px; padding: 10px 18px; color: #721c24;
     font-weight: 800; display: inline-block; margin: 6px 0;
 }
 .explanation-box {
-    background: linear-gradient(135deg,#e8f4fd,#d1ecf1);
-    border-left: 4px solid #17a2b8;
-    border-radius: 0 10px 10px 0;
-    padding: 12px 16px; color: #0c5460;
+    background: linear-gradient(135deg,#e8f4fd,#d1ecf1); border-left: 4px solid #17a2b8;
+    border-radius: 0 10px 10px 0; padding: 12px 16px; color: #0c5460;
     font-size: 0.92em; margin-top: 10px; font-weight: 600;
 }
 .hint-box {
-    background: linear-gradient(135deg,#fff3cd,#ffeeba);
-    border-left: 4px solid #ffc107;
-    border-radius: 0 10px 10px 0;
-    padding: 10px 14px; color: #856404;
+    background: linear-gradient(135deg,#fff3cd,#ffeeba); border-left: 4px solid #ffc107;
+    border-radius: 0 10px 10px 0; padding: 10px 14px; color: #856404;
     font-size: 0.88em; margin-top: 6px; font-weight: 600;
 }
 .score-display {
-    background: linear-gradient(135deg,#667eea,#764ba2);
-    border-radius: 24px; padding: 40px;
-    text-align: center;
-    box-shadow: 0 10px 40px rgba(102,126,234,0.35);
+    background: linear-gradient(135deg,#667eea,#764ba2); border-radius: 24px; padding: 40px;
+    text-align: center; box-shadow: 0 10px 40px rgba(102,126,234,0.35);
 }
 .score-number { font-size: 5em; font-weight: 900; color: white; line-height: 1; }
 .score-label { color: rgba(255,255,255,0.8); font-size: 1.1em; font-weight: 600; margin-top: 10px; }
-
 .fc-front {
-    background: linear-gradient(135deg,#667eea,#764ba2);
-    border-radius: 24px; padding: 45px 35px;
-    text-align: center; font-size: 1.4em; font-weight: 800;
-    color: white; min-height: 180px;
+    background: linear-gradient(135deg,#667eea,#764ba2); border-radius: 24px; padding: 45px 35px;
+    text-align: center; font-size: 1.4em; font-weight: 800; color: white; min-height: 180px;
     display: flex; align-items: center; justify-content: center;
     box-shadow: 0 15px 50px rgba(102,126,234,0.3);
 }
 .fc-back {
-    background: linear-gradient(135deg,#11998e,#38ef7d);
-    border-radius: 24px; padding: 45px 35px;
-    text-align: center; font-size: 1.1em; font-weight: 700;
-    color: white; min-height: 180px;
+    background: linear-gradient(135deg,#11998e,#38ef7d); border-radius: 24px; padding: 45px 35px;
+    text-align: center; font-size: 1.1em; font-weight: 700; color: white; min-height: 180px;
     display: flex; align-items: center; justify-content: center;
     box-shadow: 0 15px 50px rgba(17,153,142,0.25); margin-top: 16px;
 }
-
 .conf-know {
-    background: linear-gradient(135deg,#28a745,#20c997);
-    border-radius: 14px; padding: 14px;
+    background: linear-gradient(135deg,#28a745,#20c997); border-radius: 14px; padding: 14px;
     text-align: center; color: white; font-weight: 800;
 }
 .conf-almost {
-    background: linear-gradient(135deg,#ffc107,#fd7e14);
-    border-radius: 14px; padding: 14px;
+    background: linear-gradient(135deg,#ffc107,#fd7e14); border-radius: 14px; padding: 14px;
     text-align: center; color: white; font-weight: 800;
 }
 .conf-noidea {
-    background: linear-gradient(135deg,#dc3545,#c82333);
-    border-radius: 14px; padding: 14px;
+    background: linear-gradient(135deg,#dc3545,#c82333); border-radius: 14px; padding: 14px;
     text-align: center; color: white; font-weight: 800;
 }
-
 .chat-user {
-    background: linear-gradient(135deg,#667eea,#764ba2);
-    border-radius: 20px 20px 6px 20px;
+    background: linear-gradient(135deg,#667eea,#764ba2); border-radius: 20px 20px 6px 20px;
     padding: 16px 20px; margin: 12px 0; color: white;
 }
 .chat-ai {
-    background: white; border: 2px solid #e8e8ff;
-    border-radius: 20px 20px 20px 6px;
+    background: white; border: 2px solid #e8e8ff; border-radius: 20px 20px 20px 6px;
     padding: 16px 20px; margin: 12px 0; color: #1a1a2e;
 }
 .chat-label {
-    font-size: 0.72em; font-weight: 800;
-    letter-spacing: 2px; text-transform: uppercase;
-    margin-bottom: 6px; opacity: 0.75;
+    font-size: 0.72em; font-weight: 800; letter-spacing: 2px;
+    text-transform: uppercase; margin-bottom: 6px; opacity: 0.75;
 }
-
 .stat-card {
-    background: white; border-radius: 20px;
-    padding: 28px; text-align: center;
+    background: white; border-radius: 20px; padding: 28px; text-align: center;
     box-shadow: 0 4px 20px rgba(102,126,234,0.1);
 }
 .stat-number {
     font-size: 3em; font-weight: 900;
     background: linear-gradient(135deg,#667eea,#f093fb);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent; background-clip: text;
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
 }
 .stat-label {
     color: #6b7280; font-size: 0.9em; font-weight: 700;
     margin-top: 6px; text-transform: uppercase; letter-spacing: 1px;
 }
-
 .doc-loaded {
-    background: rgba(255,255,255,0.2);
-    border: 2px solid rgba(255,255,255,0.4);
+    background: rgba(255,255,255,0.2); border: 2px solid rgba(255,255,255,0.4);
     border-radius: 14px; padding: 14px; margin: 8px 0;
 }
 .doc-not-loaded {
-    background: rgba(0,0,0,0.15);
-    border: 2px solid rgba(255,255,255,0.2);
+    background: rgba(0,0,0,0.15); border: 2px solid rgba(255,255,255,0.2);
     border-radius: 14px; padding: 14px; margin: 8px 0;
 }
-
 .badge-easy {
-    background: linear-gradient(135deg,#d4edda,#c3e6cb);
-    border: 2px solid #28a745; border-radius: 20px;
-    padding: 4px 14px; color: #155724;
+    background: linear-gradient(135deg,#d4edda,#c3e6cb); border: 2px solid #28a745;
+    border-radius: 20px; padding: 4px 14px; color: #155724;
     font-weight: 800; font-size: 0.85em; display: inline-block;
 }
 .badge-medium {
-    background: linear-gradient(135deg,#fff3cd,#ffeeba);
-    border: 2px solid #ffc107; border-radius: 20px;
-    padding: 4px 14px; color: #856404;
+    background: linear-gradient(135deg,#fff3cd,#ffeeba); border: 2px solid #ffc107;
+    border-radius: 20px; padding: 4px 14px; color: #856404;
     font-weight: 800; font-size: 0.85em; display: inline-block;
 }
 .badge-hard {
-    background: linear-gradient(135deg,#f8d7da,#f5c6cb);
-    border: 2px solid #dc3545; border-radius: 20px;
-    padding: 4px 14px; color: #721c24;
+    background: linear-gradient(135deg,#f8d7da,#f5c6cb); border: 2px solid #dc3545;
+    border-radius: 20px; padding: 4px 14px; color: #721c24;
     font-weight: 800; font-size: 0.85em; display: inline-block;
 }
-
+.adaptive-badge {
+    background: linear-gradient(135deg,#667eea,#764ba2); border-radius: 20px;
+    padding: 6px 16px; color: white; font-weight: 800; font-size: 0.9em;
+    display: inline-block; margin: 4px;
+}
 .timer-box {
-    background: linear-gradient(135deg,#667eea,#764ba2);
-    border-radius: 16px; padding: 16px 24px;
-    text-align: center; color: white; margin: 12px 0;
-    font-size: 1.5em; font-weight: 900;
-    font-family: 'Fira Code', monospace;
+    background: linear-gradient(135deg,#667eea,#764ba2); border-radius: 16px;
+    padding: 16px 24px; text-align: center; color: white; margin: 12px 0;
+    font-size: 1.5em; font-weight: 900; font-family: 'Fira Code', monospace;
 }
 .timer-warning {
-    background: linear-gradient(135deg,#f5576c,#f093fb);
-    border-radius: 16px; padding: 16px 24px;
-    text-align: center; color: white; margin: 12px 0;
-    font-size: 1.5em; font-weight: 900;
-    font-family: 'Fira Code', monospace;
+    background: linear-gradient(135deg,#f5576c,#f093fb); border-radius: 16px;
+    padding: 16px 24px; text-align: center; color: white; margin: 12px 0;
+    font-size: 1.5em; font-weight: 900; font-family: 'Fira Code', monospace;
 }
-
+.audio-summary {
+    background: linear-gradient(135deg,#667eea,#764ba2); border-radius: 16px;
+    padding: 20px; margin: 12px 0; color: white;
+}
+.wiki-card {
+    background: white; border-radius: 16px; padding: 20px; margin: 10px 0;
+    box-shadow: 0 3px 15px rgba(102,126,234,0.1); border-left: 5px solid #636466;
+}
+.book-card {
+    background: white; border-radius: 16px; padding: 16px; margin: 8px 0;
+    box-shadow: 0 3px 15px rgba(102,126,234,0.1); border-left: 5px solid #CC4B00;
+}
 .nav-brand { font-size: 1.5em; font-weight: 900; color: white; }
 .nav-sub { font-size: 0.85em; color: rgba(255,255,255,0.7); font-weight: 600; }
-
 .stProgress > div > div {
     background: linear-gradient(90deg,#667eea,#f093fb) !important;
     border-radius: 10px !important;
 }
 .stButton > button {
-    border-radius: 12px !important;
-    font-family: 'Nunito', sans-serif !important;
-    font-weight: 800 !important;
-    font-size: 1em !important;
-    transition: all 0.2s ease !important;
-    border: none !important;
+    border-radius: 12px !important; font-family: 'Nunito', sans-serif !important;
+    font-weight: 800 !important; font-size: 1em !important;
+    transition: all 0.2s ease !important; border: none !important;
 }
 .stButton > button[kind="primary"] {
     background: linear-gradient(135deg,#667eea,#764ba2) !important;
-    color: white !important;
-    box-shadow: 0 4px 15px rgba(102,126,234,0.4) !important;
+    color: white !important; box-shadow: 0 4px 15px rgba(102,126,234,0.4) !important;
 }
 .stButton > button[kind="primary"]:hover {
     transform: translateY(-2px) !important;
     box-shadow: 0 8px 25px rgba(102,126,234,0.5) !important;
 }
 [data-testid="metric-container"] {
-    background: white !important;
-    border-radius: 16px !important;
-    padding: 20px !important;
-    box-shadow: 0 4px 15px rgba(102,126,234,0.1) !important;
+    background: white !important; border-radius: 16px !important;
+    padding: 20px !important; box-shadow: 0 4px 15px rgba(102,126,234,0.1) !important;
 }
 hr { border-color: rgba(102,126,234,0.15) !important; }
 </style>
 """, unsafe_allow_html=True)
 
-# ── Helper: Home Button ───────────────────────────────────────────────────
+# ── Helper ────────────────────────────────────────────────────────────────
 def home_button():
     col1, col2 = st.columns([1, 6])
     with col1:
@@ -342,10 +289,8 @@ defaults = {
     "quiz_type": "MCQ", "quiz_difficulty": "Medium",
     "tf_questions": [], "tf_answers": [], "tf_submitted": False, "tf_score": 0,
     "fb_questions": [], "fb_answers": [], "fb_submitted": False, "fb_score": 0,
-    "flashcards": [], "fc_index": 0, "fc_flipped": False,
-    "fc_confidence": [],
-    "chat_history": [],
-    "selected_lang": "English",
+    "flashcards": [], "fc_index": 0, "fc_flipped": False, "fc_confidence": [],
+    "chat_history": [], "selected_lang": "English",
     "timer_active": False, "timer_start": None,
     "timer_duration": 600, "timer_expired": False,
     "study_content": None,
@@ -420,7 +365,7 @@ with st.sidebar:
         st.rerun()
 
 # ═══════════════════════════════════════════════════════════════════════════
-# HOME — Feature Cards FIRST, Stats SECOND
+# HOME
 # ═══════════════════════════════════════════════════════════════════════════
 if page == "🏠 Home":
     st.markdown('<div class="hero-title">Learn Smarter,<br>Not Harder! 🚀</div>',
@@ -428,45 +373,6 @@ if page == "🏠 Home":
     st.markdown('<div class="hero-sub">Upload any document → AI generates quizzes, flashcards, study notes & more ✨</div>',
                 unsafe_allow_html=True)
 
-    # ── Feature Cards FIRST ───────────────────────────────────────────────
-    st.markdown("### 🎯 What would you like to do?")
-    col1, col2, col3 = st.columns(3)
-    col4, col5, col6 = st.columns(3)
-
-    cards_data = [
-        ("📤", "Upload Document", "Upload PDF, TXT or DOCX file and let AI read it",
-         "linear-gradient(90deg,#667eea,#764ba2)", "📤 Upload Document"),
-        ("📝", "Generate Quiz", "MCQ, True/False or Fill Blanks with Easy/Medium/Hard levels",
-         "linear-gradient(90deg,#f093fb,#f5576c)", "📝 Generate Quiz"),
-        ("🃏", "Flashcards", "Smart flip cards with confidence rating and XP rewards",
-         "linear-gradient(90deg,#4facfe,#00f2fe)", "🃏 Flashcards"),
-        ("📚", "Study Content", "AI summary, key points, mind map and exam tips",
-         "linear-gradient(90deg,#43e97b,#38f9d7)", "📚 Study Content"),
-        ("🎥", "Resources", "Find YouTube videos and free educational websites",
-         "linear-gradient(90deg,#ff512f,#dd2476)", "🎥 Resources"),
-        ("💬", "Chat with Doc", "Ask any question and AI answers from your document",
-         "linear-gradient(90deg,#fa709a,#fee140)", "💬 Chat with Doc"),
-    ]
-
-    for col, (icon, title, desc, color, target) in zip(
-        [col1, col2, col3, col4, col5, col6], cards_data
-    ):
-        with col:
-            st.markdown(f"""
-            <div class="feature-card" style="--card-color:{color}">
-                <div class="feature-icon">{icon}</div>
-                <div class="feature-title">{title}</div>
-                <div class="feature-desc">{desc}</div>
-            </div>
-            """, unsafe_allow_html=True)
-            if st.button(f"Open {icon}", key=f"nav_{title}",
-                        use_container_width=True, type="primary"):
-                st.query_params["page"] = target
-                st.rerun()
-
-    st.divider()
-
-    # ── Stats Row SECOND ──────────────────────────────────────────────────
     total_xp = get_total_xp()
     streak = get_streak_count()
     results = get_quiz_results()
@@ -476,19 +382,9 @@ if page == "🏠 Home":
 
     s1, s2, s3, s4 = st.columns(4)
     with s1:
-        st.markdown(f"""
-        <div class="xp-card">
-            <div class="xp-number">⚡ {total_xp}</div>
-            <div class="xp-label">XP · Level {level}</div>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown(f'<div class="xp-card"><div class="xp-number">⚡ {total_xp}</div><div class="xp-label">XP · Level {level}</div></div>', unsafe_allow_html=True)
     with s2:
-        st.markdown(f"""
-        <div class="streak-card">
-            <div class="xp-number">🔥 {streak}</div>
-            <div class="xp-label">Day Streak</div>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown(f'<div class="streak-card"><div class="xp-number">🔥 {streak}</div><div class="xp-label">Day Streak</div></div>', unsafe_allow_html=True)
     with s3:
         st.markdown(f"""
         <div style="background:linear-gradient(135deg,#4facfe,#00f2fe);
@@ -510,11 +406,61 @@ if page == "🏠 Home":
     st.progress((total_xp % 100) / 100)
     st.caption(f"⚡ {total_xp % 100}/100 XP to Level {level+1}")
 
-    st.divider()
-
-    # ── Recent Activity ───────────────────────────────────────────────────
+    # Adaptive difficulty suggestion
     if results:
-        st.markdown("### 📊 Recent Quiz Results")
+        try:
+            adaptive_diff = get_adaptive_difficulty(results)
+            st.markdown(f"""
+            <div style="background:linear-gradient(135deg,#667eea,#764ba2);
+                        border-radius:14px;padding:12px 20px;color:white;
+                        font-weight:700;margin:8px 0">
+                🎯 Recommended Difficulty: <span style="background:rgba(255,255,255,0.25);
+                border-radius:8px;padding:2px 10px">{adaptive_diff}</span>
+                based on your recent performance
+            </div>
+            """, unsafe_allow_html=True)
+        except:
+            pass
+
+    st.divider()
+    st.markdown("### 🎯 What would you like to do?")
+    col1, col2, col3 = st.columns(3)
+    col4, col5, col6 = st.columns(3)
+
+    cards_data = [
+        ("📤", "Upload Document", "Upload PDF, TXT or DOCX file",
+         "linear-gradient(90deg,#667eea,#764ba2)", "📤 Upload Document"),
+        ("📝", "Generate Quiz", "MCQ, True/False or Fill Blanks",
+         "linear-gradient(90deg,#f093fb,#f5576c)", "📝 Generate Quiz"),
+        ("🃏", "Flashcards", "Smart flip cards with XP rewards",
+         "linear-gradient(90deg,#4facfe,#00f2fe)", "🃏 Flashcards"),
+        ("📚", "Study Content", "AI summary, mind map and exam tips",
+         "linear-gradient(90deg,#43e97b,#38f9d7)", "📚 Study Content"),
+        ("🎥", "Resources", "YouTube, Wikipedia and free books",
+         "linear-gradient(90deg,#ff512f,#dd2476)", "🎥 Resources"),
+        ("💬", "Chat with Doc", "Ask questions about your document",
+         "linear-gradient(90deg,#fa709a,#fee140)", "💬 Chat with Doc"),
+    ]
+
+    for col, (icon, title, desc, color, target) in zip(
+        [col1, col2, col3, col4, col5, col6], cards_data
+    ):
+        with col:
+            st.markdown(f"""
+            <div class="feature-card" style="--card-color:{color}">
+                <div class="feature-icon">{icon}</div>
+                <div class="feature-title">{title}</div>
+                <div class="feature-desc">{desc}</div>
+            </div>
+            """, unsafe_allow_html=True)
+            if st.button(f"Open {icon}", key=f"nav_{title}",
+                        use_container_width=True, type="primary"):
+                st.query_params["page"] = target
+                st.rerun()
+
+    st.divider()
+    if results:
+        st.markdown("### 📊 Recent Activity")
         for r in results[:3]:
             pct = r[1]/r[2]*100
             color = "#28a745" if pct >= 70 else "#ffc107" if pct >= 50 else "#dc3545"
@@ -537,19 +483,15 @@ if page == "🏠 Home":
                 </div>
             </div>
             """, unsafe_allow_html=True)
-
         if st.button("📊 View Full Progress", use_container_width=True):
             st.query_params["page"] = "📊 Progress"
             st.rerun()
-
     else:
         st.markdown("""
         <div style="background:white;border-radius:16px;padding:30px;
                     text-align:center;box-shadow:0 3px 15px rgba(102,126,234,0.1)">
             <div style="font-size:3em">🎓</div>
-            <div style="font-weight:800;font-size:1.2em;margin:10px 0">
-                Welcome to EduContent AI!
-            </div>
+            <div style="font-weight:800;font-size:1.2em;margin:10px 0">Welcome to EduContent AI!</div>
             <div style="color:#6b7280;margin-bottom:16px">
                 Start by uploading a document to generate quizzes and flashcards
             </div>
@@ -571,34 +513,21 @@ elif page == "📤 Upload Document":
 
     col1, col2, col3 = st.columns(3)
     with col1:
-        st.markdown("""
-        <div class="feature-card" style="--card-color:linear-gradient(90deg,#667eea,#764ba2)">
-            <div class="feature-icon">📄</div>
-            <div class="feature-title">PDF Files</div>
-            <div class="feature-desc">Textbooks, papers, articles</div>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown("""<div class="feature-card" style="--card-color:linear-gradient(90deg,#667eea,#764ba2)">
+            <div class="feature-icon">📄</div><div class="feature-title">PDF Files</div>
+            <div class="feature-desc">Textbooks, papers, articles</div></div>""", unsafe_allow_html=True)
     with col2:
-        st.markdown("""
-        <div class="feature-card" style="--card-color:linear-gradient(90deg,#f093fb,#f5576c)">
-            <div class="feature-icon">📝</div>
-            <div class="feature-title">TXT Files</div>
-            <div class="feature-desc">Notes, transcripts, content</div>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown("""<div class="feature-card" style="--card-color:linear-gradient(90deg,#f093fb,#f5576c)">
+            <div class="feature-icon">📝</div><div class="feature-title">TXT Files</div>
+            <div class="feature-desc">Notes, transcripts, content</div></div>""", unsafe_allow_html=True)
     with col3:
-        st.markdown("""
-        <div class="feature-card" style="--card-color:linear-gradient(90deg,#43e97b,#38f9d7)">
-            <div class="feature-icon">📘</div>
-            <div class="feature-title">DOCX Files</div>
-            <div class="feature-desc">Word documents, assignments</div>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown("""<div class="feature-card" style="--card-color:linear-gradient(90deg,#43e97b,#38f9d7)">
+            <div class="feature-icon">📘</div><div class="feature-title">DOCX Files</div>
+            <div class="feature-desc">Word documents, assignments</div></div>""", unsafe_allow_html=True)
 
     st.divider()
     uploaded = st.file_uploader("Drop file here", type=["pdf","txt","docx"],
                                 label_visibility="collapsed")
-
     if uploaded:
         with st.spinner("⚙️ Processing your document..."):
             try:
@@ -624,6 +553,18 @@ elif page == "📤 Upload Document":
                 with st.expander("👀 Preview content"):
                     st.code(text[:1000], language=None)
                 st.success(f"✅ '{uploaded.name}' loaded!")
+
+                # Audio summary of document
+                if TTS_AVAILABLE:
+                    st.markdown("### 🔊 Audio Summary")
+                    summary_text = f"Document loaded: {uploaded.name}. It contains {len(text.split())} words. You can now generate quizzes, flashcards, or study content."
+                    try:
+                        lang_code = LANGUAGE_CODES[st.session_state["selected_lang"]]
+                        audio = text_to_speech(summary_text, lang_code)
+                        if audio:
+                            st.markdown(get_audio_html(audio, autoplay=False), unsafe_allow_html=True)
+                    except:
+                        pass
 
                 st.markdown("### What would you like to do?")
                 c1, c2, c3, c4, c5 = st.columns(5)
@@ -651,12 +592,12 @@ elif page == "📤 Upload Document":
                 st.error(f"❌ Error: {e}")
 
 # ═══════════════════════════════════════════════════════════════════════════
-# STUDY CONTENT
+# STUDY CONTENT — with Audio Summary
 # ═══════════════════════════════════════════════════════════════════════════
 elif page == "📚 Study Content":
     home_button()
     st.markdown('<div class="hero-title">📚 Study Content</div>', unsafe_allow_html=True)
-    st.markdown('<div class="hero-sub">AI generates summary, key points, mind map and exam tips</div>',
+    st.markdown('<div class="hero-sub">AI summary, key points, mind map, exam tips + audio lesson</div>',
                 unsafe_allow_html=True)
     st.divider()
 
@@ -689,14 +630,50 @@ elif page == "📚 Study Content":
             </div>
             """, unsafe_allow_html=True)
 
+        # Audio lesson for summary
+        if TTS_AVAILABLE and content.get("summary"):
+            st.markdown("### 🔊 Listen to Summary")
+            st.markdown("""
+            <div class="audio-summary">
+                <b>🎧 Audio Lesson</b> — Listen to the AI summary of your document
+            </div>
+            """, unsafe_allow_html=True)
+            try:
+                lang_code = LANGUAGE_CODES[st.session_state["selected_lang"]]
+                audio = text_to_speech(content["summary"], lang_code)
+                if audio:
+                    st.markdown(get_audio_html(audio, autoplay=False), unsafe_allow_html=True)
+            except:
+                pass
+
+            # Audio for key points
+            if content.get("key_points"):
+                if st.button("🔊 Listen to Key Points", use_container_width=True):
+                    key_points_text = "Key points: " + ". ".join(content["key_points"][:5])
+                    try:
+                        audio = text_to_speech(key_points_text, lang_code)
+                        if audio:
+                            st.markdown(get_audio_html(audio, autoplay=True), unsafe_allow_html=True)
+                    except:
+                        pass
+
+            # Audio for exam tips
+            if content.get("exam_tips"):
+                if st.button("🔊 Listen to Exam Tips", use_container_width=True):
+                    tips_text = "Exam tips: " + ". ".join(content["exam_tips"][:5])
+                    try:
+                        audio = text_to_speech(tips_text, lang_code)
+                        if audio:
+                            st.markdown(get_audio_html(audio, autoplay=True), unsafe_allow_html=True)
+                    except:
+                        pass
+
+        st.divider()
         col1, col2 = st.columns(2)
         with col1:
             st.markdown("### 📖 Summary")
-            st.markdown(f"""
-            <div class="content-card" style="--accent:#667eea">
-                {content.get("summary","")}
-            </div>
-            """, unsafe_allow_html=True)
+            st.markdown(f'<div class="content-card" style="--accent:#667eea">{content.get("summary","")}</div>',
+                       unsafe_allow_html=True)
 
             st.markdown("### 🎯 Key Points")
             for i, point in enumerate(content.get("key_points",[]), 1):
@@ -770,12 +747,12 @@ elif page == "📚 Study Content":
                 st.rerun()
 
 # ═══════════════════════════════════════════════════════════════════════════
-# QUIZ
+# QUIZ — with Adaptive Difficulty
 # ═══════════════════════════════════════════════════════════════════════════
 elif page == "📝 Generate Quiz":
     home_button()
     st.markdown('<div class="hero-title">📝 Quiz Generator</div>', unsafe_allow_html=True)
-    st.markdown('<div class="hero-sub">Choose your quiz type and difficulty level</div>',
+    st.markdown('<div class="hero-sub">Adaptive difficulty based on your performance</div>',
                 unsafe_allow_html=True)
     st.divider()
 
@@ -785,6 +762,20 @@ elif page == "📝 Generate Quiz":
             st.query_params["page"] = "📤 Upload Document"
             st.rerun()
         st.stop()
+
+    # Show adaptive difficulty suggestion
+    results = get_quiz_results()
+    try:
+        adaptive_diff = get_adaptive_difficulty(results)
+        st.markdown(f"""
+        <div style="background:linear-gradient(135deg,#43e97b,#38f9d7);
+                    border-radius:14px;padding:12px 20px;color:white;
+                    font-weight:700;margin-bottom:16px">
+            🤖 AI Recommends: <b>{adaptive_diff}</b> difficulty based on your recent scores
+        </div>
+        """, unsafe_allow_html=True)
+    except:
+        adaptive_diff = "Medium"
 
     st.markdown("### 📋 Select Quiz Type")
     t1, t2, t3 = st.columns(3)
@@ -819,7 +810,9 @@ elif page == "📝 Generate Quiz":
     with col1:
         num_q = st.slider("Questions", 3, 15, 5)
     with col2:
-        difficulty = st.selectbox("🎯 Difficulty", ["Easy","Medium","Hard"], index=1)
+        diff_options = ["Easy", "Medium", "Hard"]
+        diff_idx = diff_options.index(adaptive_diff) if adaptive_diff in diff_options else 1
+        difficulty = st.selectbox("🎯 Difficulty", diff_options, index=diff_idx)
         st.session_state["quiz_difficulty"] = difficulty
     with col3:
         timer_mins = st.selectbox("⏱️ Timer",
@@ -894,10 +887,7 @@ elif page == "📝 Generate Quiz":
         else:
             m, s = int(remaining//60), int(remaining%60)
             cls = "timer-warning" if remaining <= 60 else "timer-box"
-            timer_ph.markdown(
-                f'<div class="{cls}">⏱️ {m:02d}:{s:02d}</div>',
-                unsafe_allow_html=True
-            )
+            timer_ph.markdown(f'<div class="{cls}">⏱️ {m:02d}:{s:02d}</div>', unsafe_allow_html=True)
             time.sleep(1)
             st.rerun()
 
@@ -919,8 +909,35 @@ elif page == "📝 Generate Quiz":
             <div class="score-label">🎯 {score}/{total} correct · {diff} · +{xp_earned} XP!</div>
         </div>
         """, unsafe_allow_html=True)
+
+        # Audio score announcement
+        if TTS_AVAILABLE:
+            try:
+                lang_code = LANGUAGE_CODES[st.session_state["selected_lang"]]
+                score_text = f"Quiz completed! You scored {score} out of {total}, that is {pct:.0f} percent."
+                audio = text_to_speech(score_text, lang_code)
+                if audio:
+                    st.markdown(get_audio_html(audio, autoplay=True), unsafe_allow_html=True)
+            except:
+                pass
+
         if pct >= 80:
             st.balloons()
+
+        # Next difficulty suggestion
+        try:
+            new_results = get_quiz_results()
+            next_diff = get_adaptive_difficulty(new_results)
+            st.markdown(f"""
+            <div style="background:white;border-radius:14px;padding:14px;
+                        text-align:center;box-shadow:0 3px 15px rgba(102,126,234,0.1);
+                        border:2px solid #667eea;margin-top:12px">
+                🤖 Next time try: <b style="color:#667eea">{next_diff}</b> level
+            </div>
+            """, unsafe_allow_html=True)
+        except:
+            pass
+
         st.write("")
         c1, c2 = st.columns(2)
         with c1:
@@ -929,8 +946,7 @@ elif page == "📝 Generate Quiz":
                 st.query_params["page"] = "🏠 Home"
                 st.rerun()
         with c2:
-            if st.button("📊 View Progress", use_container_width=True,
-                        key="score_progress"):
+            if st.button("📊 View Progress", use_container_width=True, key="score_progress"):
                 st.query_params["page"] = "📊 Progress"
                 st.rerun()
 
@@ -951,6 +967,18 @@ elif page == "📝 Generate Quiz":
                 <div class="quiz-question">{q["question"]}</div>
             </div>
             """, unsafe_allow_html=True)
+
+            # Voice Q&A — listen to question
+            if TTS_AVAILABLE:
+                if st.button("🔊 Listen", key=f"tts_q{i}"):
+                    try:
+                        lang_code = LANGUAGE_CODES[st.session_state["selected_lang"]]
+                        audio = text_to_speech(q["question"], lang_code)
+                        if audio:
+                            st.markdown(get_audio_html(audio, autoplay=True), unsafe_allow_html=True)
+                    except:
+                        pass
+
             sel = st.radio(f"Q{i+1}", q["options"], index=None,
                           key=f"q{i}", label_visibility="collapsed")
             if sel:
@@ -961,6 +989,18 @@ elif page == "📝 Generate Quiz":
                 else:
                     st.markdown(f'<div class="badge-wrong">❌ {correct}</div>', unsafe_allow_html=True)
                 st.markdown(f'<div class="explanation-box">💡 {q.get("explanation","")}</div>', unsafe_allow_html=True)
+
+                # Listen to explanation
+                if TTS_AVAILABLE:
+                    if st.button("🔊 Listen to explanation", key=f"tts_exp{i}"):
+                        try:
+                            lang_code = LANGUAGE_CODES[st.session_state["selected_lang"]]
+                            exp = f"The correct answer is {correct}. {q.get('explanation','')}"
+                            audio = text_to_speech(exp, lang_code)
+                            if audio:
+                                st.markdown(get_audio_html(audio, autoplay=True), unsafe_allow_html=True)
+                        except:
+                            pass
             st.write("")
 
         if not st.session_state["quiz_submitted"]:
@@ -995,6 +1035,17 @@ elif page == "📝 Generate Quiz":
                 <div class="quiz-question">{q["question"]}</div>
             </div>
             """, unsafe_allow_html=True)
+
+            if TTS_AVAILABLE:
+                if st.button("🔊 Listen", key=f"tts_tf{i}"):
+                    try:
+                        lang_code = LANGUAGE_CODES[st.session_state["selected_lang"]]
+                        audio = text_to_speech(q["question"], lang_code)
+                        if audio:
+                            st.markdown(get_audio_html(audio, autoplay=True), unsafe_allow_html=True)
+                    except:
+                        pass
+
             sel = st.radio(f"TF{i+1}", ["True","False"], index=None,
                           key=f"tf{i}", label_visibility="collapsed", horizontal=True)
             if sel:
@@ -1210,12 +1261,12 @@ elif page == "🃏 Flashcards":
                 st.markdown(f'<div class="conf-noidea">😅 No idea<br><b style="font-size:1.5em">{stats.get("No idea",0)}</b></div>', unsafe_allow_html=True)
 
 # ═══════════════════════════════════════════════════════════════════════════
-# RESOURCES
+# RESOURCES — 4 APIs: YouTube + Wikipedia + Open Library + Links
 # ═══════════════════════════════════════════════════════════════════════════
 elif page == "🎥 Resources":
     home_button()
     st.markdown('<div class="hero-title">🎥 Learning Resources</div>', unsafe_allow_html=True)
-    st.markdown('<div class="hero-sub">YouTube videos + free educational websites for your topic</div>',
+    st.markdown('<div class="hero-sub">YouTube · Wikipedia · Free Books · Educational Websites</div>',
                 unsafe_allow_html=True)
     st.divider()
 
@@ -1242,21 +1293,25 @@ elif page == "🎥 Resources":
         label_visibility="collapsed"
     )
 
-    col1, col2 = st.columns(2)
+    col1, col2, col3, col4 = st.columns(4)
     with col1:
-        search_videos = st.button("🎥 Find YouTube Videos", type="primary", use_container_width=True)
+        search_videos = st.button("🎥 YouTube", type="primary", use_container_width=True)
     with col2:
-        search_links = st.button("🌐 Find Study Websites", use_container_width=True)
+        search_wiki = st.button("📖 Wikipedia", use_container_width=True)
+    with col3:
+        search_books_btn = st.button("📚 Free Books", use_container_width=True)
+    with col4:
+        search_links = st.button("🌐 Study Sites", use_container_width=True)
 
     st.divider()
 
+    # YouTube
     if search_videos and topic:
         with st.spinner("🔍 Searching YouTube..."):
             try:
                 videos = search_youtube_videos(topic, max_results=6)
-            except Exception as e:
+            except:
                 videos = []
-
         if videos:
             st.markdown("### 🎥 YouTube Videos")
             col1, col2 = st.columns(2)
@@ -1266,29 +1321,87 @@ elif page == "🎥 Resources":
                     <div style="background:white;border-radius:16px;padding:16px;
                                 margin:8px 0;box-shadow:0 3px 15px rgba(102,126,234,0.1);
                                 border-left:5px solid #ff0000">
-                        <div style="font-weight:800;color:#1a1a2e;font-size:0.95em;
-                                    margin-bottom:6px">{video['title']}</div>
+                        <div style="font-weight:800;color:#1a1a2e;font-size:0.95em;margin-bottom:6px">
+                            {video['title']}</div>
                         <div style="color:#6b7280;font-size:0.82em;margin-bottom:8px">
-                            📺 {video['channel']} · ⏱️ {video['duration']} · 👁️ {video['views']}
-                        </div>
+                            📺 {video['channel']} · ⏱️ {video['duration']} · 👁️ {video['views']}</div>
                         <a href="{video['url']}" target="_blank"
                            style="background:linear-gradient(135deg,#ff0000,#cc0000);
                                   color:white;padding:6px 14px;border-radius:8px;
                                   text-decoration:none;font-weight:700;font-size:0.85em">
-                            ▶️ Watch on YouTube
-                        </a>
+                            ▶️ Watch on YouTube</a>
+                    </div>
+                    """, unsafe_allow_html=True)
+
+    # Wikipedia
+    if search_wiki and topic:
+        with st.spinner("🔍 Searching Wikipedia..."):
+            try:
+                wiki = search_wikipedia(topic)
+            except:
+                wiki = {}
+        if wiki:
+            st.markdown("### 📖 Wikipedia")
+            st.markdown(f"""
+            <div class="wiki-card">
+                <div style="font-weight:800;font-size:1.2em;color:#1a1a2e;margin-bottom:8px">
+                    📖 {wiki.get('title','')}</div>
+                <div style="color:#4a4a4a;line-height:1.6;margin-bottom:12px">
+                    {wiki.get('summary','')}</div>
+                <a href="{wiki.get('url','')}" target="_blank"
+                   style="background:#636466;color:white;padding:8px 16px;
+                          border-radius:8px;text-decoration:none;font-weight:700">
+                    🔗 Read Full Article</a>
+            </div>
+            """, unsafe_allow_html=True)
+
+            # Audio summary of Wikipedia
+            if TTS_AVAILABLE and wiki.get('summary'):
+                if st.button("🔊 Listen to Wikipedia Summary"):
+                    try:
+                        lang_code = LANGUAGE_CODES[st.session_state["selected_lang"]]
+                        audio = text_to_speech(wiki['summary'], lang_code)
+                        if audio:
+                            st.markdown(get_audio_html(audio, autoplay=True), unsafe_allow_html=True)
+                    except:
+                        pass
+        else:
+            st.warning("No Wikipedia article found. Try a different topic!")
+
+    # Free Books
+    if search_books_btn and topic:
+        with st.spinner("🔍 Searching free books..."):
+            try:
+                books = search_books(topic, max_results=4)
+            except:
+                books = []
+        if books:
+            st.markdown("### 📚 Free Books — Open Library")
+            col1, col2 = st.columns(2)
+            for i, book in enumerate(books):
+                with col1 if i % 2 == 0 else col2:
+                    st.markdown(f"""
+                    <div class="book-card">
+                        <div style="font-weight:800;color:#1a1a2e;font-size:0.95em;margin-bottom:4px">
+                            📖 {book['title']}</div>
+                        <div style="color:#6b7280;font-size:0.85em;margin-bottom:8px">
+                            ✍️ {book['author']} · 📅 {book['year']}</div>
+                        <a href="{book['url']}" target="_blank"
+                           style="background:#CC4B00;color:white;padding:6px 14px;
+                                  border-radius:8px;text-decoration:none;font-weight:700;font-size:0.85em">
+                            📖 Read Free</a>
                     </div>
                     """, unsafe_allow_html=True)
         else:
-            st.warning("No videos found. Try a different search term!")
+            st.warning("No free books found. Try a different topic!")
 
+    # Educational Links
     if search_links and topic:
         st.markdown("### 🌐 Free Educational Websites")
         try:
             links = get_educational_links(topic)
-        except Exception as e:
+        except:
             links = []
-
         if links:
             col1, col2, col3 = st.columns(3)
             for i, link in enumerate(links):
@@ -1297,17 +1410,14 @@ elif page == "🎥 Resources":
                     <div style="background:white;border-radius:16px;padding:20px;
                                 margin:8px 0;box-shadow:0 3px 15px rgba(102,126,234,0.1);
                                 border-top:5px solid {link['color']};text-align:center">
-                        <div style="font-weight:800;color:#1a1a2e;font-size:1em;
-                                    margin-bottom:6px">{link['name']}</div>
+                        <div style="font-weight:800;color:#1a1a2e;font-size:1em;margin-bottom:6px">
+                            {link['name']}</div>
                         <div style="color:#6b7280;font-size:0.82em;margin-bottom:12px">
-                            {link['desc']}
-                        </div>
+                            {link['desc']}</div>
                         <a href="{link['url']}" target="_blank"
-                           style="background:{link['color']};
-                                  color:white;padding:8px 16px;border-radius:8px;
-                                  text-decoration:none;font-weight:700;font-size:0.85em">
-                            🔗 Visit Now
-                        </a>
+                           style="background:{link['color']};color:white;padding:8px 16px;
+                                  border-radius:8px;text-decoration:none;font-weight:700;font-size:0.85em">
+                            🔗 Visit Now</a>
                     </div>
                     """, unsafe_allow_html=True)
 
@@ -1315,19 +1425,19 @@ elif page == "🎥 Resources":
         st.markdown("""
         <div style="background:white;border-radius:16px;padding:30px;
                     text-align:center;box-shadow:0 3px 15px rgba(102,126,234,0.1)">
-            <div style="font-size:3em">🎥</div>
+            <div style="font-size:3em">🔍</div>
             <div style="font-weight:800;font-size:1.2em;margin:10px 0">Search any topic!</div>
-            <div style="color:#6b7280">Find free YouTube videos and educational websites instantly</div>
+            <div style="color:#6b7280">YouTube · Wikipedia · Free Books · Educational Websites</div>
         </div>
         """, unsafe_allow_html=True)
 
 # ═══════════════════════════════════════════════════════════════════════════
-# CHAT
+# VOICE Q&A CHAT
 # ═══════════════════════════════════════════════════════════════════════════
 elif page == "💬 Chat with Doc":
     home_button()
-    st.markdown('<div class="hero-title">💬 Chat with Doc</div>', unsafe_allow_html=True)
-    st.markdown('<div class="hero-sub">Ask anything — answers come from your document</div>',
+    st.markdown('<div class="hero-title">💬 Voice Q&A Chat</div>', unsafe_allow_html=True)
+    st.markdown('<div class="hero-sub">Ask anything — hear answers spoken aloud 🔊</div>',
                 unsafe_allow_html=True)
     st.divider()
 
@@ -1373,12 +1483,12 @@ elif page == "💬 Chat with Doc":
             st.rerun()
 
 # ═══════════════════════════════════════════════════════════════════════════
-# PROGRESS
+# PROGRESS — with Analytics and Recommendations
 # ═══════════════════════════════════════════════════════════════════════════
 elif page == "📊 Progress":
     home_button()
     st.markdown('<div class="hero-title">📊 Your Progress</div>', unsafe_allow_html=True)
-    st.markdown('<div class="hero-sub">Track XP, streaks, scores and confidence</div>',
+    st.markdown('<div class="hero-sub">Analytics, insights and personalized recommendations</div>',
                 unsafe_allow_html=True)
     st.divider()
 
@@ -1409,8 +1519,8 @@ elif page == "📊 Progress":
             insights = get_performance_insights(results)
             if insights:
                 st.divider()
-                st.markdown("### 💡 Performance Insights")
-                c1, c2, c3 = st.columns(3)
+                st.markdown("### 💡 Learning Analytics")
+                c1, c2, c3, c4 = st.columns(4)
                 with c1:
                     st.markdown(f"""
                     <div style="background:white;border-radius:14px;padding:16px;
@@ -1435,8 +1545,18 @@ elif page == "📊 Progress":
                         <div style="font-weight:800;font-size:1.1em;color:#667eea">{insights.get("avg_score",0):.0f}%</div>
                     </div>
                     """, unsafe_allow_html=True)
+                with c4:
+                    adaptive = insights.get("adaptive_difficulty", "Medium")
+                    st.markdown(f"""
+                    <div style="background:linear-gradient(135deg,#667eea,#764ba2);
+                                border-radius:14px;padding:16px;
+                                text-align:center;color:white">
+                        <div style="font-size:0.85em;opacity:0.85">🤖 Next Level</div>
+                        <div style="font-weight:800;font-size:1.1em">{adaptive}</div>
+                    </div>
+                    """, unsafe_allow_html=True)
 
-                st.markdown("### 📋 Recommendations")
+                st.markdown("### 📋 Personalized Recommendations")
                 for rec in insights.get("recommendations", []):
                     st.markdown(f"""
                     <div style="background:white;border-radius:12px;padding:12px 16px;
@@ -1445,6 +1565,18 @@ elif page == "📊 Progress":
                         {rec}
                     </div>
                     """, unsafe_allow_html=True)
+
+                # Audio recommendations
+                if TTS_AVAILABLE and insights.get("recommendations"):
+                    if st.button("🔊 Listen to Recommendations"):
+                        try:
+                            lang_code = LANGUAGE_CODES[st.session_state["selected_lang"]]
+                            rec_text = "Your study recommendations: " + ". ".join(insights["recommendations"])
+                            audio = text_to_speech(rec_text, lang_code)
+                            if audio:
+                                st.markdown(get_audio_html(audio, autoplay=True), unsafe_allow_html=True)
+                        except:
+                            pass
     except:
         pass
 
@@ -1477,8 +1609,7 @@ elif page == "📊 Progress":
                     <b style='color:{color};font-size:1.2em'>{pct:.0f}%</b>
                 </div>
                 <div style='color:#6b7280;font-size:0.8em;margin-top:4px'>
-                    {r[0][:16]} · {r[1]}/{r[2]} correct
-                </div>
+                    {r[0][:16]} · {r[1]}/{r[2]} correct</div>
             </div>
             """, unsafe_allow_html=True)
 

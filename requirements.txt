@@ -7,3 +7,4 @@ python-dotenv
 gTTS
 python-docx
 youtube-search-python
+requests
