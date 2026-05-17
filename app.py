@@ -92,22 +92,26 @@ section[data-testid="stSidebar"] .stRadio label {
     background-clip: text; line-height: 1.2; margin-bottom: 6px;
 }
 .hero-sub { color: #6b7280; font-size: 1.1em; font-weight: 600; margin-bottom: 24px; }
+.welcome-card {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-radius: 24px; padding: 50px 40px;
+    text-align: center; color: white;
+    box-shadow: 0 20px 60px rgba(102,126,234,0.4);
+    margin: 20px 0;
+}
+.welcome-icon { font-size: 5em; margin-bottom: 16px; }
+.welcome-title { font-size: 2.5em; font-weight: 900; margin-bottom: 12px; }
+.welcome-sub { font-size: 1.1em; opacity: 0.85; font-weight: 600; }
 .feature-card {
     background: white; border-radius: 20px; padding: 24px; margin: 8px 0;
     box-shadow: 0 4px 20px rgba(102,126,234,0.12);
-    position: relative; overflow: hidden; text-align: center;
-    cursor: pointer; transition: all 0.3s ease;
-    border: 3px solid transparent;
-}
-.feature-card:hover {
-    transform: translateY(-4px);
-    border-color: #667eea;
-    box-shadow: 0 8px 30px rgba(102,126,234,0.25);
+    position: relative; overflow: hidden; text-align: center; transition: all 0.3s ease;
 }
 .feature-card::after {
     content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 5px;
     background: var(--card-color, linear-gradient(90deg,#667eea,#764ba2));
 }
+.feature-card:hover { transform: translateY(-4px); box-shadow: 0 8px 30px rgba(102,126,234,0.25); }
 .feature-icon { font-size: 2.5em; margin-bottom: 10px; }
 .feature-title { font-size: 1.1em; font-weight: 800; color: #1a1a2e; }
 .feature-desc { font-size: 0.88em; color: #6b7280; margin-top: 4px; }
@@ -243,10 +247,6 @@ section[data-testid="stSidebar"] .stRadio label {
     padding: 16px 24px; text-align: center; color: white; margin: 12px 0;
     font-size: 1.5em; font-weight: 900; font-family: 'Fira Code', monospace;
 }
-.audio-box {
-    background: linear-gradient(135deg,#667eea,#764ba2); border-radius: 14px;
-    padding: 14px 18px; color: white; margin: 8px 0;
-}
 .nav-brand { font-size: 1.5em; font-weight: 900; color: white; }
 .nav-sub { font-size: 0.85em; color: rgba(255,255,255,0.7); font-weight: 600; }
 .stProgress > div > div {
@@ -271,8 +271,6 @@ section[data-testid="stSidebar"] .stRadio label {
     padding: 20px !important; box-shadow: 0 4px 15px rgba(102,126,234,0.1) !important;
 }
 hr { border-color: rgba(102,126,234,0.15) !important; }
-/* Hide default streamlit upload label */
-.stFileUploader label { display: none; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -289,14 +287,15 @@ defaults = {
     "timer_active": False, "timer_start": None,
     "timer_duration": 600, "timer_expired": False,
     "study_content": None, "current_page": "🏠 Home",
+    "first_visit": True,
 }
 for k, v in defaults.items():
     if k not in st.session_state:
         st.session_state[k] = v
 
-# ── Page Navigation Helper ────────────────────────────────────────────────
 def go_to(page_name):
     st.session_state["current_page"] = page_name
+    st.session_state["first_visit"] = False
     st.rerun()
 
 # ── Sidebar ───────────────────────────────────────────────────────────────
@@ -330,19 +329,15 @@ with st.sidebar:
         "📚 Study Content", "🎥 Resources",
         "💬 Chat with Doc", "📊 Progress"
     ]
-
-    # Sync sidebar with session state
     cur_page = st.session_state.get("current_page", "🏠 Home")
     if cur_page not in pages:
         cur_page = "🏠 Home"
     default_idx = pages.index(cur_page)
 
-    page = st.radio("Navigation", pages, index=default_idx,
-                    label_visibility="collapsed")
-
-    # Update session when sidebar clicked
+    page = st.radio("Navigation", pages, index=default_idx, label_visibility="collapsed")
     if page != st.session_state["current_page"]:
         st.session_state["current_page"] = page
+        st.session_state["first_visit"] = False
         st.rerun()
 
     st.divider()
@@ -352,7 +347,6 @@ with st.sidebar:
             <div style="font-size:0.7em;font-weight:800;letter-spacing:2px;
                         text-transform:uppercase;margin-bottom:4px">✅ Loaded</div>
             <div style="font-weight:700;font-size:0.95em">{st.session_state["doc_name"]}</div>
-            <div style="font-size:0.8em;opacity:0.8">{len(st.session_state["doc_text"]):,} chars</div>
         </div>
         """, unsafe_allow_html=True)
     else:
@@ -372,65 +366,31 @@ with st.sidebar:
             st.session_state[k] = v
         st.rerun()
 
-# Use session state for page
 page = st.session_state.get("current_page", "🏠 Home")
 
-# ── Home Button Helper ────────────────────────────────────────────────────
 def home_button():
-    if st.button("🏠 Home", key=f"hb_{page}_{id(st.session_state)}"):
+    if st.button("🏠 Home", key=f"hb_{page}"):
         go_to("🏠 Home")
 
 # ═══════════════════════════════════════════════════════════════════════════
 # HOME
 # ═══════════════════════════════════════════════════════════════════════════
 if page == "🏠 Home":
-    st.markdown('<div class="hero-title">🎓 EduContent AI</div>', unsafe_allow_html=True)
-    st.markdown('<div class="hero-sub">Upload any document → AI generates quizzes, flashcards & more ✨</div>',
-                unsafe_allow_html=True)
 
-    total_xp = get_total_xp()
-    streak = get_streak_count()
-    results = get_quiz_results()
-    level = total_xp // 100 + 1
-    avg = sum(r[1]/r[2]*100 for r in results)/len(results) if results else 0
+    # ── WELCOME CARD (always first) ───────────────────────────────────────
+    st.markdown("""
+    <div class="welcome-card">
+        <div class="welcome-icon">🎓</div>
+        <div class="welcome-title">Welcome to EduContent AI!</div>
+        <div class="welcome-sub">
+            Upload any document → AI instantly generates quizzes,<br>
+            flashcards, study notes, mind maps and more ✨
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
-    # Stats row
-    s1, s2, s3, s4 = st.columns(4)
-    with s1:
-        st.markdown(f'<div class="xp-card"><div class="xp-number">⚡ {total_xp}</div><div class="xp-label">XP · Level {level}</div></div>', unsafe_allow_html=True)
-    with s2:
-        st.markdown(f'<div class="streak-card"><div class="xp-number">🔥 {streak}</div><div class="xp-label">Day Streak</div></div>', unsafe_allow_html=True)
-    with s3:
-        st.markdown(f"""<div style="background:linear-gradient(135deg,#4facfe,#00f2fe);
-            border-radius:20px;padding:20px;text-align:center;color:white">
-            <div class="xp-number">📝 {len(results)}</div>
-            <div class="xp-label">Quizzes Done</div></div>""", unsafe_allow_html=True)
-    with s4:
-        st.markdown(f"""<div style="background:linear-gradient(135deg,#43e97b,#38f9d7);
-            border-radius:20px;padding:20px;text-align:center;color:white">
-            <div class="xp-number">🎯 {avg:.0f}%</div>
-            <div class="xp-label">Avg Score</div></div>""", unsafe_allow_html=True)
-
-    st.write("")
-    st.progress((total_xp % 100) / 100)
-    st.caption(f"⚡ {total_xp % 100}/100 XP to Level {level+1}")
-
-    # Adaptive suggestion
-    if results:
-        try:
-            adaptive_diff = get_adaptive_difficulty(results)
-            st.markdown(f"""
-            <div style="background:linear-gradient(135deg,#667eea,#764ba2);
-                        border-radius:14px;padding:12px 20px;color:white;font-weight:700;margin:8px 0">
-                🤖 Recommended Difficulty: <b>{adaptive_diff}</b> based on your performance
-            </div>""", unsafe_allow_html=True)
-        except:
-            pass
-
-    st.divider()
+    # ── FEATURE CARDS ─────────────────────────────────────────────────────
     st.markdown("### 🎯 What would you like to do?")
-
-    # Feature cards — clicking Open button navigates
     col1, col2, col3 = st.columns(3)
     col4, col5, col6 = st.columns(3)
 
@@ -439,13 +399,13 @@ if page == "🏠 Home":
          "linear-gradient(90deg,#667eea,#764ba2)", "📤 Upload Document"),
         ("📝", "Generate Quiz", "MCQ, True/False, Fill Blanks",
          "linear-gradient(90deg,#f093fb,#f5576c)", "📝 Generate Quiz"),
-        ("🃏", "Flashcards", "Flip cards with XP rewards",
+        ("🃏", "Flashcards", "Smart flip cards with XP",
          "linear-gradient(90deg,#4facfe,#00f2fe)", "🃏 Flashcards"),
         ("📚", "Study Content", "AI summary and mind map",
          "linear-gradient(90deg,#43e97b,#38f9d7)", "📚 Study Content"),
         ("🎥", "Resources", "YouTube, Wikipedia, Free Books",
          "linear-gradient(90deg,#ff512f,#dd2476)", "🎥 Resources"),
-        ("💬", "Chat with Doc", "Ask questions about document",
+        ("💬", "Chat with Doc", "Ask AI about your document",
          "linear-gradient(90deg,#fa709a,#fee140)", "💬 Chat with Doc"),
     ]
 
@@ -460,15 +420,15 @@ if page == "🏠 Home":
                 <div class="feature-desc">{desc}</div>
             </div>
             """, unsafe_allow_html=True)
-            if st.button(f"Open", key=f"home_nav_{title}",
-                        use_container_width=True, type="primary"):
+            if st.button("Open", key=f"home_{title}", use_container_width=True, type="primary"):
                 go_to(target)
 
     st.divider()
 
-    # Recent activity or welcome
+    # ── RECENT ACTIVITY ───────────────────────────────────────────────────
+    results = get_quiz_results()
     if results:
-        st.markdown("### 📊 Recent Activity")
+        st.markdown("### 📊 Recent Quiz Activity")
         for r in results[:3]:
             pct = r[1]/r[2]*100
             color = "#28a745" if pct >= 70 else "#ffc107" if pct >= 50 else "#dc3545"
@@ -491,20 +451,49 @@ if page == "🏠 Home":
                 </div>
             </div>
             """, unsafe_allow_html=True)
+
         if st.button("📊 View Full Progress", use_container_width=True):
             go_to("📊 Progress")
-    else:
-        st.markdown("""
-        <div style="background:white;border-radius:16px;padding:30px;
-                    text-align:center;box-shadow:0 3px 15px rgba(102,126,234,0.1)">
-            <div style="font-size:3em">🎓</div>
-            <div style="font-weight:800;font-size:1.2em;margin:10px 0">Welcome to EduContent AI!</div>
-            <div style="color:#6b7280">Start by uploading a document to generate quizzes and flashcards</div>
-        </div>
-        """, unsafe_allow_html=True)
-        st.write("")
-        if st.button("📤 Upload Your First Document", type="primary", use_container_width=True):
-            go_to("📤 Upload Document")
+
+    st.divider()
+
+    # ── STATS DASHBOARD (at the bottom) ───────────────────────────────────
+    st.markdown("### 📈 Your Stats Dashboard")
+    total_xp = get_total_xp()
+    streak = get_streak_count()
+    level = total_xp // 100 + 1
+    avg = sum(r[1]/r[2]*100 for r in results)/len(results) if results else 0
+
+    s1, s2, s3, s4 = st.columns(4)
+    with s1:
+        st.markdown(f'<div class="xp-card"><div class="xp-number">⚡ {total_xp}</div><div class="xp-label">XP · Level {level}</div></div>', unsafe_allow_html=True)
+    with s2:
+        st.markdown(f'<div class="streak-card"><div class="xp-number">🔥 {streak}</div><div class="xp-label">Day Streak</div></div>', unsafe_allow_html=True)
+    with s3:
+        st.markdown(f"""<div style="background:linear-gradient(135deg,#4facfe,#00f2fe);
+            border-radius:20px;padding:20px;text-align:center;color:white">
+            <div class="xp-number">📝 {len(results)}</div>
+            <div class="xp-label">Quizzes Done</div></div>""", unsafe_allow_html=True)
+    with s4:
+        st.markdown(f"""<div style="background:linear-gradient(135deg,#43e97b,#38f9d7);
+            border-radius:20px;padding:20px;text-align:center;color:white">
+            <div class="xp-number">🎯 {avg:.0f}%</div>
+            <div class="xp-label">Avg Score</div></div>""", unsafe_allow_html=True)
+
+    st.write("")
+    st.progress((total_xp % 100) / 100)
+    st.caption(f"⚡ {total_xp % 100}/100 XP to Level {level+1}")
+
+    if results:
+        try:
+            adaptive_diff = get_adaptive_difficulty(results)
+            st.markdown(f"""
+            <div style="background:linear-gradient(135deg,#667eea,#764ba2);border-radius:14px;
+                        padding:12px 20px;color:white;font-weight:700;margin:8px 0">
+                🤖 Recommended Difficulty: <b>{adaptive_diff}</b> based on your performance
+            </div>""", unsafe_allow_html=True)
+        except:
+            pass
 
 # ═══════════════════════════════════════════════════════════════════════════
 # UPLOAD
@@ -512,7 +501,7 @@ if page == "🏠 Home":
 elif page == "📤 Upload Document":
     home_button()
     st.markdown('<div class="hero-title">📤 Upload Document</div>', unsafe_allow_html=True)
-    st.markdown('<div class="hero-sub">Supports PDF, TXT and DOCX — all pages extracted</div>',
+    st.markdown('<div class="hero-sub">Supports PDF, TXT and DOCX — ALL pages extracted</div>',
                 unsafe_allow_html=True)
     st.divider()
 
@@ -520,7 +509,7 @@ elif page == "📤 Upload Document":
     with col1:
         st.markdown("""<div class="feature-card" style="--card-color:linear-gradient(90deg,#667eea,#764ba2)">
             <div class="feature-icon">📄</div><div class="feature-title">PDF Files</div>
-            <div class="feature-desc">Textbooks, papers, articles — ALL pages</div></div>""",
+            <div class="feature-desc">Textbooks, papers — ALL pages</div></div>""",
             unsafe_allow_html=True)
     with col2:
         st.markdown("""<div class="feature-card" style="--card-color:linear-gradient(90deg,#f093fb,#f5576c)">
@@ -530,21 +519,18 @@ elif page == "📤 Upload Document":
     with col3:
         st.markdown("""<div class="feature-card" style="--card-color:linear-gradient(90deg,#43e97b,#38f9d7)">
             <div class="feature-icon">📘</div><div class="feature-title">DOCX Files</div>
-            <div class="feature-desc">Word documents including tables</div></div>""",
+            <div class="feature-desc">Word documents with tables</div></div>""",
             unsafe_allow_html=True)
 
     st.divider()
-    uploaded = st.file_uploader(
-        "Upload", type=["pdf","txt","docx"],
-        label_visibility="collapsed"
-    )
+    uploaded = st.file_uploader("Upload your file", type=["pdf","txt","docx"],
+                                label_visibility="visible")
 
     if uploaded:
-        with st.spinner("⚙️ Processing — extracting ALL pages..."):
+        with st.spinner("⚙️ Reading all pages..."):
             try:
                 text = process_file(uploaded)
 
-                # Validate
                 if EXPORT_AVAILABLE:
                     errors, warnings = validate_document_text(text)
                     if errors:
@@ -562,21 +548,13 @@ elif page == "📤 Upload Document":
                 doc_id = save_document(uploaded.name, text)
                 st.session_state["doc_id"] = doc_id
 
-                col1, col2, col3 = st.columns(3)
-                col1.metric("📝 Characters", f"{len(text):,}")
-                col2.metric("💬 Words", f"{len(text.split()):,}")
-                col3.metric("🧩 Chunks", len(chunks))
-
                 try:
                     subject = get_subject_category(text)
                     st.info(f"📂 Detected Subject: **{subject}**")
                 except:
                     pass
 
-                with st.expander("👀 Preview (first 1000 chars)"):
-                    st.code(text[:1000], language=None)
-
-                st.success(f"✅ '{uploaded.name}' fully loaded — {len(text):,} characters from all pages!")
+                st.success(f"✅ '{uploaded.name}' loaded — {len(text.split()):,} words from all pages!")
 
                 st.markdown("### What would you like to do?")
                 c1, c2, c3, c4, c5 = st.columns(5)
@@ -598,10 +576,10 @@ elif page == "📤 Upload Document":
 
             except ValueError as e:
                 st.error(f"❌ File error: {e}")
-                st.info("💡 Make sure the file is not corrupted and contains readable text")
+                st.info("💡 Make sure file is not corrupted and has readable text")
             except Exception as e:
-                st.error(f"❌ Unexpected error: {e}")
-                st.info("💡 Try a different file format or check if the file is password protected")
+                st.error(f"❌ Processing error: {e}")
+                st.info("💡 Try a different file or format")
 
 # ═══════════════════════════════════════════════════════════════════════════
 # STUDY CONTENT
@@ -609,7 +587,7 @@ elif page == "📤 Upload Document":
 elif page == "📚 Study Content":
     home_button()
     st.markdown('<div class="hero-title">📚 Study Content</div>', unsafe_allow_html=True)
-    st.markdown('<div class="hero-sub">AI summary, key points, mind map, exam tips + audio</div>',
+    st.markdown('<div class="hero-sub">AI summary, key points, mind map + audio lesson</div>',
                 unsafe_allow_html=True)
     st.divider()
 
@@ -624,56 +602,55 @@ elif page == "📚 Study Content":
             try:
                 content = generate_study_content(st.session_state["doc_text"])
                 st.session_state["study_content"] = content
-                st.success("✅ Study content ready!")
+                st.success("✅ Done!")
             except Exception as e:
-                st.error(f"❌ Error generating content: {e}")
-                st.info("💡 Try again or check your internet connection")
+                st.error(f"❌ {e}")
+                st.info("💡 Try again or check internet connection")
 
     if st.session_state["study_content"]:
         content = st.session_state["study_content"]
         st.divider()
 
-        if "one_liner" in content:
+        if content.get("one_liner"):
             st.markdown(f"""
-            <div style="background:linear-gradient(135deg,#667eea,#764ba2);
-                        border-radius:16px;padding:20px 24px;color:white;
-                        font-size:1.2em;font-weight:700;text-align:center;margin-bottom:16px">
+            <div style="background:linear-gradient(135deg,#667eea,#764ba2);border-radius:16px;
+                        padding:20px 24px;color:white;font-size:1.2em;font-weight:700;
+                        text-align:center;margin-bottom:16px">
                 💡 {content["one_liner"]}
             </div>""", unsafe_allow_html=True)
 
-        # Audio Summary
         if TTS_AVAILABLE and content.get("summary"):
             st.markdown("### 🔊 Audio Lesson")
-            st.markdown('<div class="audio-box">🎧 Listen to AI Summary</div>', unsafe_allow_html=True)
             try:
                 lang_code = LANGUAGE_CODES.get(st.session_state["selected_lang"], "en")
-                audio = text_to_speech(content["summary"][:500], lang_code)
+                # Full summary audio
+                audio = text_to_speech(content["summary"], lang_code, max_chars=2000)
                 if audio:
-                    st.markdown(get_audio_html(audio, autoplay=False), unsafe_allow_html=True)
+                    st.markdown(get_audio_html(audio, False), unsafe_allow_html=True)
                 else:
-                    st.warning("⚠️ Audio not available. gTTS may be unavailable on this server.")
+                    st.warning("⚠️ Audio unavailable on this server")
             except Exception as e:
                 st.warning(f"⚠️ Audio error: {e}")
 
-            col_a, col_b = st.columns(2)
-            with col_a:
-                if st.button("🔊 Listen to Key Points"):
+            c_a, c_b = st.columns(2)
+            with c_a:
+                if st.button("🔊 Key Points Audio"):
                     if content.get("key_points"):
                         try:
-                            kp_text = "Key points: " + ". ".join(content["key_points"][:5])
-                            audio = text_to_speech(kp_text[:500], lang_code)
-                            if audio:
-                                st.markdown(get_audio_html(audio, True), unsafe_allow_html=True)
+                            kp = "Key points. " + ". ".join(content["key_points"][:8])
+                            a = text_to_speech(kp, lang_code, max_chars=2000)
+                            if a:
+                                st.markdown(get_audio_html(a, True), unsafe_allow_html=True)
                         except:
                             st.warning("Audio unavailable")
-            with col_b:
-                if st.button("🔊 Listen to Exam Tips"):
+            with c_b:
+                if st.button("🔊 Exam Tips Audio"):
                     if content.get("exam_tips"):
                         try:
-                            tips_text = "Exam tips: " + ". ".join(content["exam_tips"][:5])
-                            audio = text_to_speech(tips_text[:500], lang_code)
-                            if audio:
-                                st.markdown(get_audio_html(audio, True), unsafe_allow_html=True)
+                            t = "Exam tips. " + ". ".join(content["exam_tips"][:8])
+                            a = text_to_speech(t, lang_code, max_chars=2000)
+                            if a:
+                                st.markdown(get_audio_html(a, True), unsafe_allow_html=True)
                         except:
                             st.warning("Audio unavailable")
 
@@ -723,7 +700,6 @@ elif page == "📚 Study Content":
                                 border-left:3px solid #667eea;font-size:0.9em">→ {sub}</div>""",
                         unsafe_allow_html=True)
 
-        # Export
         if EXPORT_AVAILABLE:
             st.divider()
             st.markdown("### 📥 Export")
@@ -732,13 +708,12 @@ elif page == "📚 Study Content":
                 notes_txt = export_study_notes_txt(content, st.session_state.get("doc_name","doc"))
                 st.download_button("📥 Download Study Notes",
                     data=notes_txt,
-                    file_name=f"study_notes_{datetime.now().strftime('%Y%m%d_%H%M')}.txt",
+                    file_name=f"notes_{datetime.now().strftime('%Y%m%d_%H%M')}.txt",
                     mime="text/plain", use_container_width=True)
             with c2:
                 if st.session_state.get("flashcards"):
-                    fc_txt = export_flashcards_txt(
-                        st.session_state["flashcards"],
-                        st.session_state.get("doc_name","doc"))
+                    fc_txt = export_flashcards_txt(st.session_state["flashcards"],
+                                                   st.session_state.get("doc_name","doc"))
                     st.download_button("📥 Download Flashcards",
                         data=fc_txt,
                         file_name=f"flashcards_{datetime.now().strftime('%Y%m%d_%H%M')}.txt",
@@ -747,7 +722,7 @@ elif page == "📚 Study Content":
         st.divider()
         c1, c2, c3, c4 = st.columns(4)
         with c1:
-            if st.button("📝 Take Quiz", use_container_width=True, type="primary"):
+            if st.button("📝 Quiz", use_container_width=True, type="primary"):
                 go_to("📝 Generate Quiz")
         with c2:
             if st.button("🃏 Flashcards", use_container_width=True, type="primary"):
@@ -781,18 +756,18 @@ elif page == "📝 Generate Quiz":
         st.markdown(f"""
         <div style="background:linear-gradient(135deg,#43e97b,#38f9d7);border-radius:14px;
                     padding:12px 20px;color:white;font-weight:700;margin-bottom:16px">
-            🤖 AI Recommends: <b>{adaptive_diff}</b> difficulty based on your recent scores
+            🤖 Recommended: <b>{adaptive_diff}</b> difficulty
         </div>""", unsafe_allow_html=True)
     except:
         adaptive_diff = "Medium"
 
-    st.markdown("### 📋 Select Quiz Type")
+    st.markdown("### 📋 Quiz Type")
     t1, t2, t3 = st.columns(3)
     for col, qtype, icon, desc in zip(
         [t1, t2, t3],
         ["MCQ", "True/False", "Fill Blanks"],
         ["🔘", "✅", "✏️"],
-        ["Multiple Choice", "True or False", "Complete the sentence"]
+        ["Multiple Choice", "True or False", "Fill in the blank"]
     ):
         with col:
             selected = st.session_state["quiz_type"] == qtype
@@ -828,51 +803,54 @@ elif page == "📝 Generate Quiz":
         gen = st.button("⚡ Go!", type="primary", use_container_width=True)
 
     badge_cls = {"Easy":"badge-easy","Medium":"badge-medium","Hard":"badge-hard"}
-    st.markdown(
-        f'<span class="{badge_cls[difficulty]}">🎯 {difficulty}</span> &nbsp;'
-        f'<span style="color:#6b7280;font-size:0.9em">Type: {st.session_state["quiz_type"]}</span>',
-        unsafe_allow_html=True)
 
     if gen:
-        with st.spinner(f"🤖 Generating {st.session_state['quiz_type']} ({difficulty})..."):
+        with st.spinner(f"🤖 Generating quiz..."):
             try:
                 qtype = st.session_state["quiz_type"]
                 if qtype == "MCQ":
                     q = generate_quiz(st.session_state["doc_text"], num_q, difficulty)
-                    st.session_state["quiz_questions"] = q
-                    st.session_state["quiz_answers"] = [None]*len(q)
-                    st.session_state["quiz_submitted"] = False
-                    st.session_state["quiz_score"] = 0
+                    st.session_state.update({
+                        "quiz_questions": q,
+                        "quiz_answers": [None]*len(q),
+                        "quiz_submitted": False,
+                        "quiz_score": 0
+                    })
                 elif qtype == "True/False":
                     q = generate_true_false(st.session_state["doc_text"], num_q, difficulty)
-                    st.session_state["tf_questions"] = q
-                    st.session_state["tf_answers"] = [None]*len(q)
-                    st.session_state["tf_submitted"] = False
-                    st.session_state["tf_score"] = 0
+                    st.session_state.update({
+                        "tf_questions": q,
+                        "tf_answers": [None]*len(q),
+                        "tf_submitted": False,
+                        "tf_score": 0
+                    })
                 elif qtype == "Fill Blanks":
                     q = generate_fill_blanks(st.session_state["doc_text"], num_q, difficulty)
-                    st.session_state["fb_questions"] = q
-                    st.session_state["fb_answers"] = [""]*len(q)
-                    st.session_state["fb_submitted"] = False
-                    st.session_state["fb_score"] = 0
+                    st.session_state.update({
+                        "fb_questions": q,
+                        "fb_answers": [""]*len(q),
+                        "fb_submitted": False,
+                        "fb_score": 0
+                    })
 
                 quiz_id = save_quiz(st.session_state["doc_id"] or 1, [])
                 st.session_state["quiz_id"] = quiz_id
 
                 if timer_mins != "No Timer":
                     mins = int(timer_mins.split()[0])
-                    st.session_state["timer_duration"] = mins * 60
-                    st.session_state["timer_active"] = True
-                    st.session_state["timer_start"] = time.time()
-                    st.session_state["timer_expired"] = False
+                    st.session_state.update({
+                        "timer_duration": mins * 60,
+                        "timer_active": True,
+                        "timer_start": time.time(),
+                        "timer_expired": False
+                    })
                 else:
-                    st.session_state["timer_active"] = False
-                    st.session_state["timer_expired"] = False
+                    st.session_state.update({"timer_active": False, "timer_expired": False})
 
                 st.success(f"✅ {num_q} questions ready!")
             except Exception as e:
-                st.error(f"❌ Quiz generation failed: {e}")
-                st.info("💡 Check internet connection and try again")
+                st.error(f"❌ {e}")
+                st.info("💡 Check internet and try again")
 
     timer_ph = st.empty()
     if st.session_state["timer_active"] and not (
@@ -883,11 +861,10 @@ elif page == "📝 Generate Quiz":
         elapsed = time.time() - st.session_state["timer_start"]
         remaining = st.session_state["timer_duration"] - elapsed
         if remaining <= 0:
-            st.session_state["timer_expired"] = True
-            st.session_state["timer_active"] = False
-            st.session_state["quiz_submitted"] = True
-            st.session_state["tf_submitted"] = True
-            st.session_state["fb_submitted"] = True
+            st.session_state.update({
+                "timer_expired": True, "timer_active": False,
+                "quiz_submitted": True, "tf_submitted": True, "fb_submitted": True
+            })
             st.rerun()
         else:
             m, s = int(remaining//60), int(remaining%60)
@@ -905,61 +882,54 @@ elif page == "📝 Generate Quiz":
         pct = score/total*100
         try:
             save_quiz_result(
-                st.session_state["quiz_id"] or 1, score, total, qtype, diff,
+                st.session_state["quiz_id"] or 1,
+                score, total, qtype, diff,
                 st.session_state.get("doc_name", "")
             )
         except Exception as e:
-            print(f"Save result error: {e}")
-        xp_earned = score * 10
+            st.warning(f"Could not save result: {e}")
+
+        xp = score * 10
         st.markdown(f"""
         <div class="score-display">
             <div class="score-number">{pct:.0f}%</div>
-            <div class="score-label">🎯 {score}/{total} correct · {diff} · +{xp_earned} XP!</div>
+            <div class="score-label">🎯 {score}/{total} · {diff} · +{xp} XP!</div>
         </div>""", unsafe_allow_html=True)
 
-        # Audio score
         if TTS_AVAILABLE:
             try:
                 lang_code = LANGUAGE_CODES.get(st.session_state["selected_lang"], "en")
-                score_text = f"Quiz done! You scored {pct:.0f} percent. {xp_earned} XP earned!"
-                audio = text_to_speech(score_text, lang_code)
-                if audio:
-                    st.markdown(get_audio_html(audio, True), unsafe_allow_html=True)
+                txt = f"Quiz complete! You scored {pct:.0f} percent. You earned {xp} XP!"
+                a = text_to_speech(txt, lang_code)
+                if a:
+                    st.markdown(get_audio_html(a, True), unsafe_allow_html=True)
             except:
                 pass
 
         if pct >= 80:
             st.balloons()
 
-        # Export quiz
         if EXPORT_AVAILABLE:
-            questions_export = (
-                st.session_state.get("quiz_questions") or
-                st.session_state.get("tf_questions") or
-                st.session_state.get("fb_questions") or []
-            )
-            if questions_export:
+            qs = (st.session_state.get("quiz_questions") or
+                  st.session_state.get("tf_questions") or
+                  st.session_state.get("fb_questions") or [])
+            if qs:
                 try:
-                    quiz_txt = export_quiz_questions_txt(
-                        questions_export,
-                        st.session_state.get("doc_name","doc"),
-                        qtype, diff
-                    )
-                    st.download_button("📥 Download Quiz Questions",
-                        data=quiz_txt,
+                    qtxt = export_quiz_questions_txt(
+                        qs, st.session_state.get("doc_name","doc"), qtype, diff)
+                    st.download_button("📥 Download Quiz",
+                        data=qtxt,
                         file_name=f"quiz_{datetime.now().strftime('%Y%m%d_%H%M')}.txt",
                         mime="text/plain", use_container_width=True, key="dl_quiz")
                 except:
                     pass
 
-        st.write("")
         c1, c2 = st.columns(2)
         with c1:
-            if st.button("🏠 Back to Home", use_container_width=True,
-                        type="primary", key="score_home"):
+            if st.button("🏠 Home", use_container_width=True, type="primary", key="score_home"):
                 go_to("🏠 Home")
         with c2:
-            if st.button("📊 View Progress", use_container_width=True, key="score_prog"):
+            if st.button("📊 Progress", use_container_width=True, key="score_prog"):
                 go_to("📊 Progress")
 
     # MCQ
@@ -979,14 +949,15 @@ elif page == "📝 Generate Quiz":
                 <div class="quiz-question">{q["question"]}</div>
             </div>""", unsafe_allow_html=True)
 
-            if TTS_AVAILABLE and st.button("🔊", key=f"tts_q{i}", help="Listen to question"):
-                try:
-                    lang_code = LANGUAGE_CODES.get(st.session_state["selected_lang"], "en")
-                    audio = text_to_speech(q["question"], lang_code)
-                    if audio:
-                        st.markdown(get_audio_html(audio, True), unsafe_allow_html=True)
-                except:
-                    pass
+            if TTS_AVAILABLE:
+                if st.button("🔊", key=f"tts_q{i}", help="Listen"):
+                    try:
+                        lc = LANGUAGE_CODES.get(st.session_state["selected_lang"], "en")
+                        a = text_to_speech(q["question"], lc)
+                        if a:
+                            st.markdown(get_audio_html(a, True), unsafe_allow_html=True)
+                    except:
+                        pass
 
             sel = st.radio(f"Q{i+1}", q["options"], index=None,
                           key=f"q{i}", label_visibility="collapsed")
@@ -1001,18 +972,19 @@ elif page == "📝 Generate Quiz":
             st.write("")
 
         if not st.session_state["quiz_submitted"]:
-            if st.button("✅ Submit MCQ", type="primary", use_container_width=True):
+            if st.button("✅ Submit", type="primary", use_container_width=True):
                 score = sum(1 for i,q in enumerate(questions)
                            if st.session_state["quiz_answers"][i]==q["answer"])
-                st.session_state["quiz_score"] = score
-                st.session_state["quiz_submitted"] = True
-                st.session_state["timer_active"] = False
+                st.session_state.update({
+                    "quiz_score": score, "quiz_submitted": True, "timer_active": False
+                })
                 st.rerun()
         else:
             show_score(st.session_state["quiz_score"], len(questions), "MCQ", diff)
-            if st.button("🔄 Retake", use_container_width=True):
-                st.session_state["quiz_answers"] = [None]*len(questions)
-                st.session_state["quiz_submitted"] = False
+            if st.button("🔄 Retake"):
+                st.session_state.update({
+                    "quiz_answers": [None]*len(questions), "quiz_submitted": False
+                })
                 st.rerun()
 
     # True/False
@@ -1047,15 +1019,16 @@ elif page == "📝 Generate Quiz":
             if st.button("✅ Submit T/F", type="primary", use_container_width=True):
                 score = sum(1 for i,q in enumerate(questions)
                            if st.session_state["tf_answers"][i]==q["answer"])
-                st.session_state["tf_score"] = score
-                st.session_state["tf_submitted"] = True
-                st.session_state["timer_active"] = False
+                st.session_state.update({
+                    "tf_score": score, "tf_submitted": True, "timer_active": False
+                })
                 st.rerun()
         else:
             show_score(st.session_state["tf_score"], len(questions), "True/False", diff)
-            if st.button("🔄 Retake", use_container_width=True):
-                st.session_state["tf_answers"] = [None]*len(questions)
-                st.session_state["tf_submitted"] = False
+            if st.button("🔄 Retake"):
+                st.session_state.update({
+                    "tf_answers": [None]*len(questions), "tf_submitted": False
+                })
                 st.rerun()
 
     # Fill Blanks
@@ -1074,7 +1047,7 @@ elif page == "📝 Generate Quiz":
                 <div class="quiz-question">{q["question"]}</div>
             </div>""", unsafe_allow_html=True)
             if not submitted:
-                st.markdown(f'<div class="hint-box">💡 Hint: {q.get("hint","")}</div>', unsafe_allow_html=True)
+                st.markdown(f'<div class="hint-box">💡 {q.get("hint","")}</div>', unsafe_allow_html=True)
                 ans = st.text_input(f"Answer {i+1}", key=f"fb{i}",
                                    placeholder="Type your answer...",
                                    label_visibility="collapsed")
@@ -1095,15 +1068,16 @@ elif page == "📝 Generate Quiz":
                     1 for i,q in enumerate(questions)
                     if (st.session_state["fb_answers"][i] or "").strip().lower() == q["answer"].strip().lower()
                 )
-                st.session_state["fb_score"] = score
-                st.session_state["fb_submitted"] = True
-                st.session_state["timer_active"] = False
+                st.session_state.update({
+                    "fb_score": score, "fb_submitted": True, "timer_active": False
+                })
                 st.rerun()
         else:
             show_score(st.session_state["fb_score"], len(questions), "Fill Blanks", diff)
-            if st.button("🔄 Retake", use_container_width=True):
-                st.session_state["fb_answers"] = [""]*len(questions)
-                st.session_state["fb_submitted"] = False
+            if st.button("🔄 Retake"):
+                st.session_state.update({
+                    "fb_answers": [""]*len(questions), "fb_submitted": False
+                })
                 st.rerun()
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -1124,7 +1098,7 @@ elif page == "🃏 Flashcards":
 
     col1, col2 = st.columns([3,1])
     with col1:
-        num_cards = st.slider("Number of flashcards", 5, 20, 8)
+        num_cards = st.slider("Cards", 5, 20, 8)
     with col2:
         st.write("")
         gen = st.button("⚡ Generate", type="primary", use_container_width=True)
@@ -1134,13 +1108,13 @@ elif page == "🃏 Flashcards":
             try:
                 cards = generate_flashcards(st.session_state["doc_text"], num_cards)
                 save_flashcards(st.session_state["doc_id"] or 1, cards)
-                st.session_state["flashcards"] = cards
-                st.session_state["fc_index"] = 0
-                st.session_state["fc_flipped"] = False
-                st.session_state["fc_confidence"] = [None]*len(cards)
+                st.session_state.update({
+                    "flashcards": cards, "fc_index": 0,
+                    "fc_flipped": False, "fc_confidence": [None]*len(cards)
+                })
                 st.success(f"✅ {len(cards)} flashcards ready!")
             except Exception as e:
-                st.error(f"❌ Flashcard generation failed: {e}")
+                st.error(f"❌ {e}")
 
     cards = st.session_state["flashcards"]
     if cards:
@@ -1150,18 +1124,16 @@ elif page == "🃏 Flashcards":
         confidence_list = st.session_state["fc_confidence"]
         rated = sum(1 for c in confidence_list if c is not None)
 
-        st.markdown(f"**Card {idx+1} of {len(cards)}** · {rated}/{len(cards)} rated")
+        st.markdown(f"**Card {idx+1} of {len(cards)}** · {rated} rated")
         st.progress((idx+1)/len(cards))
 
         _, col, _ = st.columns([1,3,1])
         with col:
-            st.write("")
             st.markdown(f'<div class="fc-front">❓ {card["front"]}</div>', unsafe_allow_html=True)
-
             if TTS_AVAILABLE:
                 try:
-                    lang_code = LANGUAGE_CODES.get(st.session_state["selected_lang"], "en")
-                    af = text_to_speech(card["front"], lang_code)
+                    lc = LANGUAGE_CODES.get(st.session_state["selected_lang"], "en")
+                    af = text_to_speech(card["front"], lc)
                     if af:
                         st.markdown(get_audio_html(af), unsafe_allow_html=True)
                 except:
@@ -1171,7 +1143,7 @@ elif page == "🃏 Flashcards":
                 st.markdown(f'<div class="fc-back">✅ {card["back"]}</div>', unsafe_allow_html=True)
                 if TTS_AVAILABLE:
                     try:
-                        ab = text_to_speech(card["back"], lang_code)
+                        ab = text_to_speech(card["back"], lc)
                         if ab:
                             st.markdown(get_audio_html(ab), unsafe_allow_html=True)
                     except:
@@ -1181,7 +1153,7 @@ elif page == "🃏 Flashcards":
                 st.markdown("**How well did you know this?**")
                 c1, c2, c3 = st.columns(3)
                 with c1:
-                    if st.button("😎 Know it!\n+15 XP", use_container_width=True, key="know"):
+                    if st.button("😎 Know it +15XP", use_container_width=True, key="know"):
                         st.session_state["fc_confidence"][idx] = "Know it"
                         save_flashcard_confidence(card["front"], "Know it")
                         if idx < len(cards)-1:
@@ -1189,7 +1161,7 @@ elif page == "🃏 Flashcards":
                             st.session_state["fc_flipped"] = False
                         st.rerun()
                 with c2:
-                    if st.button("🤔 Almost\n+8 XP", use_container_width=True, key="almost"):
+                    if st.button("🤔 Almost +8XP", use_container_width=True, key="almost"):
                         st.session_state["fc_confidence"][idx] = "Almost"
                         save_flashcard_confidence(card["front"], "Almost")
                         if idx < len(cards)-1:
@@ -1197,7 +1169,7 @@ elif page == "🃏 Flashcards":
                             st.session_state["fc_flipped"] = False
                         st.rerun()
                 with c3:
-                    if st.button("😅 No idea\n+3 XP", use_container_width=True, key="noidea"):
+                    if st.button("😅 No idea +3XP", use_container_width=True, key="noidea"):
                         st.session_state["fc_confidence"][idx] = "No idea"
                         save_flashcard_confidence(card["front"], "No idea")
                         if idx < len(cards)-1:
@@ -1210,19 +1182,16 @@ elif page == "🃏 Flashcards":
                     st.session_state["fc_flipped"] = True
                     st.rerun()
 
-            st.write("")
             b1, b2 = st.columns(2)
             with b1:
-                if st.button("⬅️ Prev", use_container_width=True):
+                if st.button("⬅️ Prev"):
                     if idx > 0:
-                        st.session_state["fc_index"] -= 1
-                        st.session_state["fc_flipped"] = False
+                        st.session_state.update({"fc_index": idx-1, "fc_flipped": False})
                         st.rerun()
             with b2:
-                if st.button("Next ➡️", use_container_width=True):
+                if st.button("Next ➡️"):
                     if idx < len(cards)-1:
-                        st.session_state["fc_index"] += 1
-                        st.session_state["fc_flipped"] = False
+                        st.session_state.update({"fc_index": idx+1, "fc_flipped": False})
                         st.rerun()
 
         if rated > 0:
@@ -1239,6 +1208,12 @@ elif page == "🃏 Flashcards":
             with c3:
                 st.markdown(f'<div class="conf-noidea">😅 No idea<br><b style="font-size:1.5em">{stats.get("No idea",0)}</b></div>', unsafe_allow_html=True)
 
+            if EXPORT_AVAILABLE:
+                fc_txt = export_flashcards_txt(cards, st.session_state.get("doc_name","doc"))
+                st.download_button("📥 Download Flashcards",
+                    data=fc_txt, file_name="flashcards.txt",
+                    mime="text/plain", use_container_width=True)
+
 # ═══════════════════════════════════════════════════════════════════════════
 # RESOURCES
 # ═══════════════════════════════════════════════════════════════════════════
@@ -1254,7 +1229,7 @@ elif page == "🎥 Resources":
             subject = get_subject_category(st.session_state["doc_text"])
             st.markdown(f"""
             <div style="background:linear-gradient(135deg,#667eea,#764ba2);border-radius:14px;
-                        padding:14px 20px;color:white;font-weight:700;font-size:1.1em;margin-bottom:16px">
+                        padding:14px 20px;color:white;font-weight:700;margin-bottom:16px">
                 📂 Detected Subject: {subject}
             </div>""", unsafe_allow_html=True)
             default_topic = st.session_state["doc_name"].replace(".pdf","").replace(".txt","").replace(".docx","")
@@ -1263,9 +1238,10 @@ elif page == "🎥 Resources":
     except:
         default_topic = ""
 
-    topic = st.text_input("🔍 Search topic", value=default_topic,
-        placeholder="e.g. Machine Learning, Photosynthesis...",
-        label_visibility="collapsed")
+    topic = st.text_input("🔍 Enter topic to search",
+        value=default_topic,
+        placeholder="e.g. Structural Analysis, Machine Learning...",
+        label_visibility="visible")
 
     col1, col2, col3, col4 = st.columns(4)
     with col1:
@@ -1287,23 +1263,21 @@ elif page == "🎥 Resources":
                 videos = []
         if videos:
             st.markdown("### 🎥 YouTube Videos")
-            col1, col2 = st.columns(2)
-            for i, video in enumerate(videos):
-                with col1 if i % 2 == 0 else col2:
+            c1, c2 = st.columns(2)
+            for i, v in enumerate(videos):
+                with c1 if i % 2 == 0 else c2:
                     st.markdown(f"""
                     <div style="background:white;border-radius:16px;padding:16px;margin:8px 0;
                                 box-shadow:0 3px 15px rgba(102,126,234,0.1);border-left:5px solid #ff0000">
-                        <div style="font-weight:800;color:#1a1a2e;font-size:0.95em;margin-bottom:6px">
-                            {video['title']}</div>
+                        <div style="font-weight:800;font-size:0.95em;margin-bottom:6px">{v['title']}</div>
                         <div style="color:#6b7280;font-size:0.82em;margin-bottom:8px">
-                            📺 {video['channel']} · ⏱️ {video['duration']}</div>
-                        <a href="{video['url']}" target="_blank"
-                           style="background:linear-gradient(135deg,#ff0000,#cc0000);color:white;
-                                  padding:6px 14px;border-radius:8px;text-decoration:none;
-                                  font-weight:700;font-size:0.85em">▶️ Watch</a>
+                            📺 {v['channel']} · ⏱️ {v['duration']}</div>
+                        <a href="{v['url']}" target="_blank"
+                           style="background:#ff0000;color:white;padding:6px 14px;border-radius:8px;
+                                  text-decoration:none;font-weight:700">▶️ Watch</a>
                     </div>""", unsafe_allow_html=True)
         else:
-            st.warning("No videos found. Try a different search term!")
+            st.warning("No videos found!")
 
     if search_wiki and topic:
         with st.spinner("🔍 Searching Wikipedia..."):
@@ -1320,43 +1294,43 @@ elif page == "🎥 Resources":
                 <div style="color:#4a4a4a;line-height:1.6;margin-bottom:12px">{wiki.get('summary','')}</div>
                 <a href="{wiki.get('url','')}" target="_blank"
                    style="background:#636466;color:white;padding:8px 16px;border-radius:8px;
-                          text-decoration:none;font-weight:700">🔗 Read Full Article</a>
+                          text-decoration:none;font-weight:700">🔗 Read More</a>
             </div>""", unsafe_allow_html=True)
             if TTS_AVAILABLE and wiki.get("summary"):
-                if st.button("🔊 Listen to Wikipedia Summary"):
+                if st.button("🔊 Listen to Summary"):
                     try:
-                        lang_code = LANGUAGE_CODES.get(st.session_state["selected_lang"], "en")
-                        audio = text_to_speech(wiki["summary"][:500], lang_code)
-                        if audio:
-                            st.markdown(get_audio_html(audio, True), unsafe_allow_html=True)
+                        lc = LANGUAGE_CODES.get(st.session_state["selected_lang"], "en")
+                        a = text_to_speech(wiki["summary"], lc, max_chars=2000)
+                        if a:
+                            st.markdown(get_audio_html(a, True), unsafe_allow_html=True)
                     except:
-                        st.warning("Audio unavailable")
+                        pass
         else:
             st.warning("No Wikipedia article found!")
 
     if search_books_btn and topic:
-        with st.spinner("🔍 Searching free books..."):
+        with st.spinner("🔍 Searching books..."):
             try:
                 books = search_books(topic, max_results=4)
             except:
                 books = []
         if books:
-            st.markdown("### 📚 Free Books — Open Library")
-            col1, col2 = st.columns(2)
-            for i, book in enumerate(books):
-                with col1 if i % 2 == 0 else col2:
+            st.markdown("### 📚 Free Books")
+            c1, c2 = st.columns(2)
+            for i, b in enumerate(books):
+                with c1 if i % 2 == 0 else c2:
                     st.markdown(f"""
                     <div style="background:white;border-radius:16px;padding:16px;margin:8px 0;
                                 box-shadow:0 3px 15px rgba(102,126,234,0.1);border-left:5px solid #CC4B00">
-                        <div style="font-weight:800;font-size:0.95em;margin-bottom:4px">{book['title']}</div>
+                        <div style="font-weight:800;font-size:0.95em;margin-bottom:4px">{b['title']}</div>
                         <div style="color:#6b7280;font-size:0.85em;margin-bottom:8px">
-                            ✍️ {book['author']} · 📅 {book['year']}</div>
-                        <a href="{book['url']}" target="_blank"
+                            ✍️ {b['author']} · 📅 {b['year']}</div>
+                        <a href="{b['url']}" target="_blank"
                            style="background:#CC4B00;color:white;padding:6px 14px;border-radius:8px;
-                                  text-decoration:none;font-weight:700;font-size:0.85em">📖 Read Free</a>
+                                  text-decoration:none;font-weight:700">📖 Read Free</a>
                     </div>""", unsafe_allow_html=True)
         else:
-            st.warning("No books found. Try a different topic!")
+            st.warning("No books found!")
 
     if search_links and topic:
         try:
@@ -1364,10 +1338,10 @@ elif page == "🎥 Resources":
         except:
             links = []
         if links:
-            st.markdown("### 🌐 Free Educational Websites")
-            col1, col2, col3 = st.columns(3)
+            st.markdown("### 🌐 Study Sites")
+            c1, c2, c3 = st.columns(3)
             for i, link in enumerate(links):
-                with [col1, col2, col3][i % 3]:
+                with [c1, c2, c3][i % 3]:
                     st.markdown(f"""
                     <div style="background:white;border-radius:16px;padding:20px;margin:8px 0;
                                 box-shadow:0 3px 15px rgba(102,126,234,0.1);
@@ -1376,24 +1350,18 @@ elif page == "🎥 Resources":
                         <div style="color:#6b7280;font-size:0.82em;margin-bottom:12px">{link['desc']}</div>
                         <a href="{link['url']}" target="_blank"
                            style="background:{link['color']};color:white;padding:8px 16px;
-                                  border-radius:8px;text-decoration:none;font-weight:700">🔗 Visit</a>
+                                  border-radius:8px;text-decoration:none;font-weight:700">Visit</a>
                     </div>""", unsafe_allow_html=True)
 
     if not topic:
-        st.markdown("""
-        <div style="background:white;border-radius:16px;padding:30px;text-align:center;
-                    box-shadow:0 3px 15px rgba(102,126,234,0.1)">
-            <div style="font-size:3em">🔍</div>
-            <div style="font-weight:800;font-size:1.2em;margin:10px 0">Search any topic!</div>
-            <div style="color:#6b7280">YouTube · Wikipedia · Free Books · Study Sites</div>
-        </div>""", unsafe_allow_html=True)
+        st.info("👆 Enter a topic above and click any search button!")
 
 # ═══════════════════════════════════════════════════════════════════════════
-# CHAT
+# CHAT — Voice Q&A with speech-to-text
 # ═══════════════════════════════════════════════════════════════════════════
 elif page == "💬 Chat with Doc":
     home_button()
-    st.markdown('<div class="hero-title">💬 Voice Q&A Chat</div>', unsafe_allow_html=True)
+    st.markdown('<div class="hero-title">💬 Chat with Doc</div>', unsafe_allow_html=True)
     st.markdown('<div class="hero-sub">Ask anything — AI answers from your document 🔊</div>',
                 unsafe_allow_html=True)
     st.divider()
@@ -1404,9 +1372,66 @@ elif page == "💬 Chat with Doc":
             go_to("📤 Upload Document")
         st.stop()
 
-    if not TTS_AVAILABLE:
-        st.warning("⚠️ Audio not available on this server. Text answers will still work.")
+    # Voice-to-text using browser Web Speech API
+    st.markdown("### 🎤 Voice Input")
+    st.markdown("""
+    <div style="background:white;border-radius:14px;padding:16px;
+                box-shadow:0 3px 15px rgba(102,126,234,0.1);margin-bottom:16px">
+        <p style="color:#6b7280;margin-bottom:10px;font-weight:600">
+            🎤 Click the microphone below, speak your question, then copy the text into the chat box:
+        </p>
+        <div id="voice-output" style="background:#f0f4ff;border-radius:10px;padding:12px;
+                                       min-height:50px;color:#1a1a2e;font-weight:600;
+                                       margin-bottom:10px;border:2px solid #667eea">
+            Your speech will appear here...
+        </div>
+        <button onclick="startVoice()"
+                style="background:linear-gradient(135deg,#667eea,#764ba2);color:white;
+                       border:none;padding:10px 20px;border-radius:10px;
+                       font-weight:800;cursor:pointer;font-size:1em">
+            🎤 Start Voice Input
+        </button>
+        <button onclick="stopVoice()"
+                style="background:linear-gradient(135deg,#f5576c,#f093fb);color:white;
+                       border:none;padding:10px 20px;border-radius:10px;
+                       font-weight:800;cursor:pointer;font-size:1em;margin-left:10px">
+            ⏹️ Stop
+        </button>
+    </div>
+    <script>
+    let recognition = null;
+    function startVoice() {
+        if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+            document.getElementById('voice-output').innerText = 
+                '⚠️ Voice not supported in this browser. Use Chrome!';
+            return;
+        }
+        const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+        recognition = new SR();
+        recognition.continuous = false;
+        recognition.interimResults = true;
+        recognition.lang = 'en-US';
+        recognition.onresult = function(e) {
+            let transcript = '';
+            for (let i = e.resultIndex; i < e.results.length; i++) {
+                transcript += e.results[i][0].transcript;
+            }
+            document.getElementById('voice-output').innerText = transcript;
+        };
+        recognition.onerror = function(e) {
+            document.getElementById('voice-output').innerText = 
+                '❌ Error: ' + e.error + '. Try again.';
+        };
+        recognition.start();
+        document.getElementById('voice-output').innerText = '🎤 Listening...';
+    }
+    function stopVoice() {
+        if (recognition) recognition.stop();
+    }
+    </script>
+    """, unsafe_allow_html=True)
 
+    # Chat history
     for h in st.session_state["chat_history"]:
         st.markdown(f'<div class="chat-user"><div class="chat-label">🧑 You</div>{h["user"]}</div>',
                    unsafe_allow_html=True)
@@ -1415,7 +1440,7 @@ elif page == "💬 Chat with Doc":
         if TTS_AVAILABLE and h.get("audio"):
             st.markdown(get_audio_html(h["audio"]), unsafe_allow_html=True)
 
-    question = st.chat_input("Ask anything about your document...")
+    question = st.chat_input("Type your question or paste voice text here...")
     if question:
         with st.spinner("🤔 Thinking..."):
             try:
@@ -1426,19 +1451,16 @@ elif page == "💬 Chat with Doc":
                 audio_b64 = None
                 if TTS_AVAILABLE:
                     try:
-                        lang_code = LANGUAGE_CODES.get(st.session_state["selected_lang"], "en")
-                        audio_b64 = text_to_speech(answer[:500], lang_code)
+                        lc = LANGUAGE_CODES.get(st.session_state["selected_lang"], "en")
+                        audio_b64 = text_to_speech(answer, lc, max_chars=2000)
                     except:
                         pass
                 st.session_state["chat_history"].append({
-                    "user": question,
-                    "assistant": answer,
-                    "audio": audio_b64
+                    "user": question, "assistant": answer, "audio": audio_b64
                 })
                 st.rerun()
             except Exception as e:
-                st.error(f"❌ Chat error: {e}")
-                st.info("💡 Check your internet connection and try again")
+                st.error(f"❌ {e}")
 
     if st.session_state["chat_history"]:
         if st.button("🗑️ Clear Chat", use_container_width=True):
@@ -1451,7 +1473,7 @@ elif page == "💬 Chat with Doc":
 elif page == "📊 Progress":
     home_button()
     st.markdown('<div class="hero-title">📊 Your Progress</div>', unsafe_allow_html=True)
-    st.markdown('<div class="hero-sub">Analytics, insights and personalized recommendations</div>',
+    st.markdown('<div class="hero-sub">Analytics, insights and study recommendations</div>',
                 unsafe_allow_html=True)
     st.divider()
 
@@ -1477,13 +1499,12 @@ elif page == "📊 Progress":
     st.progress((total_xp % 100) / 100)
     st.caption(f"{total_xp % 100}/100 XP to Level {level+1}")
 
-    # Performance insights
     try:
         if results:
             insights = get_performance_insights(results)
             if insights:
                 st.divider()
-                st.markdown("### 💡 Learning Analytics")
+                st.markdown("### 💡 Analytics")
                 c1, c2, c3, c4 = st.columns(4)
                 with c1:
                     st.markdown(f"""<div style="background:white;border-radius:14px;padding:16px;
@@ -1500,14 +1521,14 @@ elif page == "📊 Progress":
                 with c3:
                     st.markdown(f"""<div style="background:white;border-radius:14px;padding:16px;
                         text-align:center;box-shadow:0 3px 15px rgba(102,126,234,0.1)">
-                        <div style="font-size:0.85em;color:#6b7280">📊 Average</div>
+                        <div style="font-size:0.85em;color:#6b7280">📊 Avg</div>
                         <div style="font-weight:800;color:#667eea">{insights.get("avg_score",0):.0f}%</div></div>""",
                         unsafe_allow_html=True)
                 with c4:
                     adaptive = insights.get("adaptive_difficulty","Medium")
                     st.markdown(f"""<div style="background:linear-gradient(135deg,#667eea,#764ba2);
                         border-radius:14px;padding:16px;text-align:center;color:white">
-                        <div style="font-size:0.85em;opacity:0.85">🤖 Next Level</div>
+                        <div style="font-size:0.85em;opacity:0.85">🤖 Next</div>
                         <div style="font-weight:800">{adaptive}</div></div>""",
                         unsafe_allow_html=True)
 
@@ -1517,14 +1538,14 @@ elif page == "📊 Progress":
                         margin:6px 0;box-shadow:0 2px 10px rgba(102,126,234,0.1);
                         border-left:4px solid #667eea">{rec}</div>""", unsafe_allow_html=True)
 
-                if TTS_AVAILABLE and insights.get("recommendations"):
+                if TTS_AVAILABLE:
                     if st.button("🔊 Listen to Recommendations"):
                         try:
-                            lang_code = LANGUAGE_CODES.get(st.session_state["selected_lang"], "en")
-                            rec_text = "Your recommendations: " + ". ".join(insights["recommendations"])
-                            audio = text_to_speech(rec_text[:500], lang_code)
-                            if audio:
-                                st.markdown(get_audio_html(audio, True), unsafe_allow_html=True)
+                            lc = LANGUAGE_CODES.get(st.session_state["selected_lang"], "en")
+                            rt = "Recommendations: " + ". ".join(insights.get("recommendations",[]))
+                            a = text_to_speech(rt, lc, max_chars=2000)
+                            if a:
+                                st.markdown(get_audio_html(a, True), unsafe_allow_html=True)
                         except:
                             pass
     except:
@@ -1537,7 +1558,7 @@ elif page == "📊 Progress":
             st.info("No quizzes yet!")
             if st.button("📝 Take First Quiz", type="primary"):
                 go_to("📝 Generate Quiz")
-        for r in results[:8]:
+        for r in results[:10]:
             pct = r[1]/r[2]*100
             color = "#28a745" if pct >= 70 else "#ffc107" if pct >= 50 else "#dc3545"
             emoji = "🏆" if pct >= 80 else "👍" if pct >= 60 else "📚"
@@ -1557,17 +1578,13 @@ elif page == "📊 Progress":
                     </div>
                     <b style='color:{color}'>{pct:.0f}%</b>
                 </div>
-                <div style='color:#6b7280;font-size:0.8em;margin-top:4px'>
-                    {r[0][:16]} · {r[1]}/{r[2]} correct</div>
+                <div style='color:#6b7280;font-size:0.8em'>{r[0][:16]} · {r[1]}/{r[2]}</div>
             </div>""", unsafe_allow_html=True)
 
-        # Export results
         if EXPORT_AVAILABLE and results:
-            st.write("")
-            results_txt = export_quiz_results_txt(results)
-            st.download_button("📥 Download Progress Report",
-                data=results_txt,
-                file_name=f"progress_{datetime.now().strftime('%Y%m%d_%H%M')}.txt",
+            rt = export_quiz_results_txt(results)
+            st.download_button("📥 Progress Report",
+                data=rt, file_name="progress.txt",
                 mime="text/plain", use_container_width=True)
 
     with col2:
@@ -1587,8 +1604,7 @@ elif page == "📊 Progress":
                 <div style='background:white;border-radius:12px;padding:14px 18px;margin:8px 0;
                             box-shadow:0 3px 15px rgba(102,126,234,0.1);border-left:5px solid {color}'>
                     <div style='display:flex;justify-content:space-between'>
-                        <span>{icon} {label}</span>
-                        <b style='color:{color}'>{count} ({pct:.0f}%)</b>
+                        <span>{icon} {label}</span><b style='color:{color}'>{count} ({pct:.0f}%)</b>
                     </div>
                     <div style='background:#f0f0f0;border-radius:8px;height:8px;margin-top:8px'>
                         <div style='background:{color};height:8px;border-radius:8px;width:{pct}%'></div>
@@ -1598,13 +1614,13 @@ elif page == "📊 Progress":
         st.markdown("### 📅 Study Activity")
         streak_data = get_study_streak()
         if streak_data:
-            for study_date, xp in streak_data[:7]:
+            for sd, xp in streak_data[:7]:
                 st.markdown(f"""
                 <div style='background:white;border-radius:10px;padding:10px 16px;margin:4px 0;
                             box-shadow:0 2px 10px rgba(102,126,234,0.08);
                             display:flex;justify-content:space-between'>
-                    <span style='color:#6b7280'>📅 {study_date}</span>
+                    <span style='color:#6b7280'>📅 {sd}</span>
                     <span style='color:#667eea;font-weight:800'>+{xp} XP</span>
                 </div>""", unsafe_allow_html=True)
         else:
-            st.info("Start studying to build your streak!")
+            st.info("Study daily to build your streak!")
