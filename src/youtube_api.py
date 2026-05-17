@@ -43,23 +43,51 @@ def search_youtube_videos(query: str, max_results: int = 6) -> list:
         ]
 
 
-# ── API 2: Wikipedia ──────────────────────────────────────────────────────
+# ── API 2: Wikipedia (FIXED) ──────────────────────────────────────────────
 def search_wikipedia(topic: str) -> dict:
-    """Search Wikipedia for topic summary."""
+    """Search Wikipedia using search API first, then fetch summary."""
     try:
-        url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{urllib.parse.quote(topic)}"
-        response = requests.get(url, timeout=5)
-        if response.status_code == 200:
-            data = response.json()
-            return {
-                "title": data.get("title", ""),
-                "summary": data.get("extract", "")[:500] + "...",
-                "url": data.get("content_urls", {}).get("desktop", {}).get("page", ""),
-                "image": data.get("thumbnail", {}).get("source", "")
-            }
-    except:
+        # Step 1: Use Wikipedia search API to find the best matching page title
+        search_url = "https://en.wikipedia.org/w/api.php"
+        search_params = {
+            "action": "query",
+            "list": "search",
+            "srsearch": topic,
+            "format": "json",
+            "srlimit": 1
+        }
+        search_resp = requests.get(search_url, params=search_params, timeout=8)
+        if search_resp.status_code == 200:
+            search_data = search_resp.json()
+            results = search_data.get("query", {}).get("search", [])
+            if results:
+                page_title = results[0]["title"]
+
+                # Step 2: Fetch summary using REST API with found title
+                summary_url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{urllib.parse.quote(page_title)}"
+                summary_resp = requests.get(summary_url, timeout=8)
+                if summary_resp.status_code == 200:
+                    data = summary_resp.json()
+                    summary_text = data.get("extract", "")
+                    # Limit to 600 chars
+                    if len(summary_text) > 600:
+                        summary_text = summary_text[:600] + "..."
+                    return {
+                        "title": data.get("title", page_title),
+                        "summary": summary_text,
+                        "url": data.get("content_urls", {}).get("desktop", {}).get("page", f"https://en.wikipedia.org/wiki/{urllib.parse.quote(page_title)}"),
+                        "image": data.get("thumbnail", {}).get("source", "")
+                    }
+    except Exception as e:
         pass
-    return {}
+
+    # Fallback: direct link
+    return {
+        "title": topic.title(),
+        "summary": f"Click below to read the Wikipedia article about '{topic}'.",
+        "url": f"https://en.wikipedia.org/wiki/Special:Search?search={urllib.parse.quote(topic)}",
+        "image": ""
+    }
 
 
 # ── API 3: Open Library ───────────────────────────────────────────────────
@@ -67,15 +95,15 @@ def search_books(topic: str, max_results: int = 4) -> list:
     """Search Open Library for free books."""
     try:
         url = f"https://openlibrary.org/search.json?q={urllib.parse.quote(topic)}&limit={max_results}"
-        response = requests.get(url, timeout=5)
+        response = requests.get(url, timeout=8)
         if response.status_code == 200:
             data = response.json()
             books = []
             for doc in data.get("docs", [])[:max_results]:
                 books.append({
-                    "title": doc.get("title", ""),
+                    "title": doc.get("title", "Unknown Title"),
                     "author": ", ".join(doc.get("author_name", ["Unknown"])[:2]),
-                    "year": doc.get("first_publish_year", ""),
+                    "year": doc.get("first_publish_year", "N/A"),
                     "url": f"https://openlibrary.org{doc.get('key', '')}"
                 })
             return books
@@ -129,7 +157,7 @@ def get_educational_links(topic: str) -> list:
             {
                 "name": "🏫 edX",
                 "url": f"https://www.edx.org/search?q={encoded}",
-                "desc": "Harvard MIT courses",
+                "desc": "Harvard & MIT courses",
                 "color": "#02262B"
             },
             {
@@ -239,7 +267,7 @@ def get_performance_insights(quiz_results: list) -> dict:
             recommendations.append("🔄 Retake quizzes on weak topics")
         else:
             recommendations.append("🏆 Try Hard level questions for a challenge")
-            recommendations.append("🎓 You are doing great keep it up!")
+            recommendations.append("🎓 You are doing great, keep it up!")
             recommendations.append("📊 Track your streak to maintain momentum")
 
         return {
